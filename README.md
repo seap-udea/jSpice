@@ -37,6 +37,35 @@ With **jSpice** you will be able to:
 - Calculate complex ephemeris for simple interactive websites without
   the burden of complex CGI scripts.
 
+Quickstart
+----------
+
+Before you start you have to decide if you will use an already
+existing **jSpice** public server or if you want to install a new
+server in your own website.
+
+The following instructions assume that you will use the public test
+server running at http://urania.udea.edu.co/jSpice.  If you want to
+install a new server jump to next section and then come back.
+
+Once you have decided which server you will use, you just need to
+download the package **jSpice** from github:
+
+```
+$ git clone --branch master http://github.com/seap-udea/jSpice.git
+```
+
+The package come along with the server source files and data.  If you
+will not install a server by yourself remove the ``server`
+directory.
+
+```
+$ rm -r jSpice/server
+```
+
+We recommend to place ``jSqpice`` in the ``js`` directory of your
+website.
+
 Getting a copy
 --------------
 
