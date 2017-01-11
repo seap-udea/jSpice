@@ -72,6 +72,31 @@ Load the **jSpice** library in your website:
 $ rm -r jSpice/server
 ```
 
+Configuring a jSpice server
+---------------------------
+
+The key component of **jSpice** is the execution server.  This is the
+machine where the SPICE code will be executed.
+
+In order to configure a **jSpice** server your first you need to
+enable CGI in the webserver. 
+
+```   
+a2enmod cgi
+```
+
+Next you need to authorize local ``.htaccess`` files to override rules
+by adding the following directive into the apache configuration file:
+
+```
+#/etc/apache2/apache2.conf:
+<Directory JSPICEDIR>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+</Directory>
+```
+
 Getting a copy
 --------------
 
