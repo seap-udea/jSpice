@@ -1,10 +1,18 @@
 # jSpice
-SPICE enabled javascript library for high precision astronomical calculations in the Web
+SPICE-enabled javascript library for high precision astronomical calculations in the Web
 
 Presentation
 ------------
 
-**jSpice** is a SPICE-enabled.
+**jSpice** is a ``javascript+Pyhton`` library intended to provide an
+efficient set of tools to calculate high precision astronomical
+ephemeris for interactive websites.
+
+Although many interactive astronomical websites include their own code
+to calculate ephemeris or use third-party libraries, most of them rely
+on algorithms with limited precision and functionality.
+
+
 
 Getting a copy
 --------------
