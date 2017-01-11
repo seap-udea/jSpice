@@ -25,12 +25,17 @@ purpose professional astronomers and aerospace engineers use offline
 tools such as NASA NAIF's **SPICE toolkit** or USNO's Nova software.
 
 **jSpice** is an effort to bring the power and precission of those
-tools, to the realm of interactive JS+AJAX+CSS powered websites.
+tools, to the realm of interactive JS+AJAX+CSS+HTML5 powered websites.
 
 With **jSpice** you will be able to:
 
 - Invoke any SPICE routine from a JS powered website. 
 
+- Create JS+HTML5 animations using real time calculations powered by
+  SPICE.
+
+- Calculate complex ephemeris for simple interactive websites without
+  the burden of complex CGI scripts.
 
 Getting a copy
 --------------
