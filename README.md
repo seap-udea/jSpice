@@ -4,6 +4,8 @@ SPICE enabled javascript library for high precision astronomical calculations in
 Presentation
 ------------
 
+**jSpice** is a SPICE-enabled.
+
 Getting a copy
 --------------
 
