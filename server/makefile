@@ -5,7 +5,7 @@ cleancrap:
 
 clean:cleancrap
 	@echo "Cleaning all..."
-	@rm -rf *.png *.dat
+	@find . -name "*.pyc" -exec rm -rf {} \;
 
 commit:
 	@echo "Commiting..."
