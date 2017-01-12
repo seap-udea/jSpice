@@ -1,33 +1,54 @@
 <!DOCTYPE html>
+<!--
+#############################################################
+#             /######            /##                        #
+#            /##__  ##          |__/                        #
+#        /##| ##  \__/  /######  /##  /#######  /######     #
+#       |__/|  ######  /##__  ##| ## /##_____/ /##__  ##    #
+#        /## \____  ##| ##  \ ##| ##| ##      | ########    #
+#       | ## /##  \ ##| ##  | ##| ##| ##      | ##_____/    #
+#       | ##|  ######/| #######/| ##|  #######|  #######    #
+#       | ## \______/ | ##____/ |__/ \_______/ \_______/    #
+#  /##  | ##          | ##                                  #
+# |  ######/          | ##                                  #
+#  \______/           |__/                                  #
+#							    #
+#                 Jorge I. Zuluaga (C) 2016		    #
+#############################################################
+# Function: Test index
+#############################################################
+-->
 <head>
-  <link rel="stylesheet" href="js/jSpice/jspice.css" type="text/css">
-  <script type="text/javascript" src="js/jSpice/jquery.js"></script>
-  <script type="text/javascript" src="js/jSpice/jspice.js"></script>
+  <link rel="stylesheet" href="css/jspice.css" type="text/css">
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/jspice.js"></script>
   <script>
+
+var PROCESS;
+function abortKernel()
+{
+    console.log("Aborting kernel...");
+    console.log(PROCESS);
+    PROCESS.abort();
+}
+
     $(document).ready(function(){
-	//jspice.init("http://astronomia.udea.edu.co/jSpice/js/jSpice");
-        //console.log($("#code1").html());
-	jspice.url="http://astronomia.udea.edu.co/jSpice/js/jSpice";
-	var process=$.ajax({
+	jspice.init("http://astronomia.udea.edu.co/jSpice/");
+	console.log(jspice.SESSIONID);
+	PROCESS=$.ajax({
 	    type:'POST',
-	    url:jspice.url+'/server/cgi-bin/jspice.kernel.cgi',
+	    url:jspice.url+'/cgi-bin/jspice.kernel.cgi',
 	    data:{},
 	    async:true,
 	    timeout:10000,
 	    complete:function(x,t){
 		console.log("Complete:"+t);
 	    }
-	    /*
-	    dataType:'jsonp',
-	    headers:{'Access-Control-Allow-Origin': '*'},
-	    */
 	});
-	console.log(process);
-	setTimeout(function(){
-	    console.log("Aborting kernel...");
-	    process.abort();
-	},10000);
+	setTimeout(abortKernel,1000);
     });
+
+
   </script>
 </head>
 <body>
@@ -36,6 +57,7 @@
   </template>
 
   Prueba de jSpice
+<button onclick="abortKernel()">Stop kernel</button>
 
   <script>
    /*

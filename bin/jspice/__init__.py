@@ -24,7 +24,7 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #SENSIBLE MODULES
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-import sys,os,inspect,zmq,cgi,glob
+import sys,os,inspect,zmq,cgi,glob,signal
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #USEFUL MODULES
@@ -47,7 +47,7 @@ def loadConf(path):
     return conf
 
 def logEntry(flog,entry,instance="root"):
-    time=datetime.datetime.utcnow().strftime("%m/%d/%y %H:%M:%S")
+    time=datetime.datetime.now().strftime("%m/%d/%y %H:%M:%S")
     log="[%s] [%s] %s\n"%(time,instance,entry)
     flog.write(log)
     flog.flush()

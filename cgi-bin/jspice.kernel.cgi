@@ -32,8 +32,16 @@ PATH=os.path.realpath(
             inspect.currentframe()))[0]))
 sys.path.insert(0,PATH+"/../bin")
 flog=open(PATH+"/../log/server.log","a")
-
 from jspice.core import *
+
+#############################################################
+#CANCEL BEHAVIOR
+#############################################################
+def sigHandler(signal,frame):
+    import sys
+    logEntry(flog,"Terminating server in port %d"%port)
+    sys.exit(0)
+signal.signal(signal.SIGINT,sigHandler)
 
 #############################################################
 #READ CONFIGURATION FILE
@@ -55,11 +63,10 @@ for kernel in glob.glob(PATH+"/../"+CONF["kernels_dir"]+"/*"):
 #############################################################
 #INITIALIZE COMMUNICATIONS
 #############################################################
-for port in xrange(5500,5600):
+for port in xrange(CONF["port_range"][0],CONF["port_range"][1]):
     try:
         context=zmq.Context()
         socket=context.socket(zmq.REP)
-        #socket.bind("tcp://*:%s"%CONF["port"])
         socket.bind("tcp://*:%d"%port)
         logEntry(flog,"Listening in port %d"%port)
         break
@@ -83,6 +90,7 @@ logEntry(flog,"Starting server...",instance)
 while True:
     cmd=socket.recv()
     logEntry(flog,"Command received: %s"%cmd,instance)
+    if "exit(" in cmd:break
     try:
         exec(cmd)
         logEntry(flog,"Command succesfully executed.",instance)
@@ -90,3 +98,4 @@ while True:
         logEntry(flog,"Error:\n\t"+str(e))
     socket.send("{}".format(globals()))
     i+=1
+logEntry(flog,"Exiting server",instance)

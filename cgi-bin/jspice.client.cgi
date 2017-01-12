@@ -34,6 +34,15 @@ sys.path.insert(0,PATH+"/../bin")
 from jspice import *
 
 #############################################################
+#CANCEL BEHAVIOR
+#############################################################
+def sigHandler(signal,frame):
+    import sys
+    logEntry(flog,"Terminating client")
+    sys.exit(0)
+signal.signal(signal.SIGINT,sigHandler)
+
+#############################################################
 #READ CONFIGURATION FILE
 #############################################################
 CONF=loadConf(PATH+"/../")

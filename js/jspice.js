@@ -18,9 +18,9 @@ Function: jSpice javascript library
 #############################################################
 */
 
-/*
-  Module pattern
-*/
+//######################################################################
+//MODULE PATTERN OF JSPICE
+//######################################################################
 var jspice=(function($){
     
     var jspice={
@@ -58,8 +58,18 @@ var jspice=(function($){
 	this.url=url;
 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	//SESSIONID
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	this.SESSIONID=readCookie("SESSIONID");
+	if(!this.SESSIONID){
+	    this.SESSIONID=randomString(20);
+	    createCookie("SESSIONID",this.SESSIONID,1);
+	}
+
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//KERNEL INDICATOR
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	/*
 	var indicator=document.createElement('div');
 	$(indicator).
 	    addClass('jsp jsp-indicator').
@@ -74,6 +84,7 @@ var jspice=(function($){
 	    updateKernel(data.response);
 	    console.log(jspice.kernel.now);
 	});
+	*/
     };
 
     jspice.submit=function(code,success=function(){},error=function(){}){
@@ -94,3 +105,44 @@ var jspice=(function($){
 
     return jspice;
 }($));
+
+//######################################################################
+//ADDITIONAL ROUTINES
+//######################################################################
+/*
+  Source:
+  https://www.daniweb.com/programming/web-development/threads/19283/how-to-save-session-values-in-javascript
+*/
+function createCookie(name,value,days) {
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime()+(days*24*60*60*1000));
+        var expires = "; expires="+date.toGMTString();
+    }
+    else var expires = "";
+    document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function readCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+
+function eraseCookie(name) {
+    createCookie(name,"",-1);
+}
+
+function randomString(num) {
+    var s = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    var random=Array(num).join().split(',').map(function(){ 
+	return s.charAt(Math.floor(Math.random() * s.length)); 
+    }).join('');
+    return random;
+}
+
