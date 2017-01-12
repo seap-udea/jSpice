@@ -31,6 +31,7 @@ PATH=os.path.realpath(
         inspect.getfile(
             inspect.currentframe()))[0]))
 sys.path.insert(0,PATH+"/../bin")
+flog=open(PATH+"/../log/client.log","a")
 from jspice import *
 
 #############################################################
@@ -51,20 +52,34 @@ CONF=loadConf(PATH+"/../")
 #CGI PARAMETERS
 #############################################################
 params=cgi.FieldStorage();
-callback=params.getvalue("callback")
 code=params.getvalue("code")
+callback=params.getvalue("callback")
+if code is None:
+    iarg=1
+    try:
+        port=int(argv[iarg]);iarg+=1
+        code=argv[iarg];iarg+=1
+        callback="json"
+    except:
+        print>>stderr,"You must provide port and code: jspice.client.cgi <port> '<code>'"
+        sys.exit(1)
+
+logEntry(flog,"Client invoked calling to port %d"%port)
+logEntry(flog,"Client commands:\n\tCallback:%s\n\tCode:\n\t%s"%(callback,code))
 
 #############################################################
 #EXECUTION
 #############################################################
 context=zmq.Context()
 socket=context.socket(zmq.REQ)
-socket.connect("tcp://urania.udea.edu.co:%s"%CONF["port"])
+socket.connect("tcp://urania.udea.edu.co:%s"%port)
 socket.send(code);
-response=socket.recv();
-
-#############################################################
-#OUTPUT
-#############################################################
-print callback+"""({"code":"%s","configuration":"%s","response":"%s"})"""%\
-    (code,"{}".format(CONF),response)
+if "exit(" in code:
+    logEntry(flog,"Exiting signal to server in port %d"%port)
+else:
+    response=socket.recv();
+    #############################################################
+    #OUTPUT
+    #############################################################
+    print callback+"""({"code":"%s","configuration":"%s","response":"%s"})"""%\
+        (code,"{}".format(CONF),response)

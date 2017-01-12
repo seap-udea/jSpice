@@ -72,6 +72,7 @@ for port in xrange(CONF["port_range"][0],CONF["port_range"][1]):
         break
     except zmq.error.ZMQError:
         logEntry(flog,"Error with port %d"%port)
+instance="server in port %d"%port
 
 #############################################################
 #REMOVE AND ADD MODULES
@@ -85,7 +86,6 @@ for mod in CONF["numerical_modules"]:exec(mod)
 #RECEIVE
 #############################################################
 i=0
-instance="server in port %d"%port
 logEntry(flog,"Starting server...",instance)
 while True:
     cmd=socket.recv()

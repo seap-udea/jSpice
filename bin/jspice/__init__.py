@@ -37,6 +37,7 @@ import datetime
 argv=sys.argv
 stderr=sys.stderr
 stdout=sys.stdout
+exit=sys.exit
 
 #############################################################
 #UTIL ROUTINES
