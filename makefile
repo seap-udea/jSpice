@@ -3,9 +3,11 @@ cleancrap:
 	@find . -name "*~" -exec rm -rf {} \;
 	@find . -name "#" -exec rm -rf {} \;
 
-clean:cleancrap
-	@echo "Cleaning all..."
-	@rm -rf *.png *.dat
+cleancode:
+	@echo "Cleaning code..."
+	@find . -name "*.pyc" -exec rm -rf {} \;
+
+clean:cleancrap cleancode
 
 commit:
 	@echo "Commiting..."
