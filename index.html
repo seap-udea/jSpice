@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<head>
+  <link rel="stylesheet" href="js/jSpice/jspice.css" type="text/css">
+  <script type="text/javascript" src="js/jSpice/jquery.js"></script>
+  <script type="text/javascript" src="js/jSpice/jspice.js"></script>
+  <script>
+    $(document).ready(function(){
+	//jspice.init("http://astronomia.udea.edu.co/jSpice/js/jSpice");
+        //console.log($("#code1").html());
+	jspice.url="http://astronomia.udea.edu.co/jSpice/js/jSpice";
+	var process=$.ajax({
+	    type:'POST',
+	    url:jspice.url+'/server/cgi-bin/jspice.kernel.cgi',
+	    data:{},
+	    async:true,
+	    timeout:10000,
+	    complete:function(x,t){
+		console.log("Complete:"+t);
+	    }
+	    /*
+	    dataType:'jsonp',
+	    headers:{'Access-Control-Allow-Origin': '*'},
+	    */
+	});
+	console.log(process);
+	setTimeout(function(){
+	    console.log("Aborting kernel...");
+	    process.abort();
+	},10000);
+    });
+  </script>
+</head>
+<body>
+  <template id="code1">
+    a=1;
+  </template>
+
+  Prueba de jSpice
+
+  <script>
+   /*
+   jspice.submit("b=1").done(function(data){
+       updateKernel(data.response);
+   });
+   */
+  </script>
+</body>
+</html>
