@@ -29,6 +29,15 @@ sys.path.insert(0,PATH+"/../bin")
 from jspice.core import *
 
 #############################################################
+#CANCEL BEHAVIOR
+#############################################################
+def sigHandler(signal,frame):
+    import sys
+    logEntry(flog,"Terminating client")
+    sys.exit(0)
+signal.signal(signal.SIGINT,sigHandler)
+
+#############################################################
 #READ CONFIGURATION FILE
 #############################################################
 CONF=loadConf(PATH+"/../")
@@ -56,5 +65,3 @@ print spy.jutcnow()
 print spy.jlocnow()
 print spy.jetnow()
 
-flog=open("/tmp/a","a")
-logEntry(flog,"Log")
