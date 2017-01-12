@@ -14,41 +14,47 @@
 #							    #
 #                 Jorge I. Zuluaga (C) 2016		    #
 #############################################################
-#Function: jSpice basic python routines
+# Function: jSpice kernel
 #############################################################
 
 #############################################################
 #EXTERNAL MODULES
 #############################################################
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#SENSIBLE MODULES
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-import sys,os,inspect,zmq,cgi,glob
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#USEFUL MODULES
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-import datetime
+import sys,os,inspect
+PATH=os.path.realpath(
+    os.path.abspath(os.path.split(
+        inspect.getfile(
+            inspect.currentframe()))[0]))
+sys.path.insert(0,PATH+"/../bin")
+from jspice.core import *
 
 #############################################################
-#MACROS
+#READ CONFIGURATION FILE
 #############################################################
-argv=sys.argv
-stderr=sys.stderr
-stdout=sys.stdout
+CONF=loadConf(PATH+"/../")
 
 #############################################################
-#UTIL ROUTINES
+#LOAD SPICE KERNELS
 #############################################################
-def loadConf(path):
-    conf=dict()
-    execfile(path+"/server.cfg",{},conf)
-    return conf
+for kernel in glob.glob(PATH+"/../"+CONF["kernels_dir"]+"/*"):
+    spy.furnsh(kernel)
 
-def logEntry(flog,entry,instance="root"):
-    time=datetime.datetime.utcnow().strftime("%m/%d/%y %H:%M:%S")
-    log="[%s] [%s] %s\n"%(time,instance,entry)
-    flog.write(log)
-    flog.flush()
-    #print>>stderr,log,
+#############################################################
+#REMOVE AND ADD MODULES
+#############################################################
+#REMOVE SENSIBLE MODULES
+exec("del(%s)"%CONF["sensible_modules"])
+#ADD NEW MODULES
+for mod in CONF["numerical_modules"]:exec(mod)
+
+#############################################################
+#TEST CODE
+#############################################################
+import sys
+
+print spy.jutcnow()
+print spy.jlocnow()
+print spy.jetnow()
+
+flog=open("/tmp/a","a")
+logEntry(flog,"Log")

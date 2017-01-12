@@ -1,0 +1,72 @@
+#!/usr/bin/python
+#############################################################
+#             /######            /##                        #
+#            /##__  ##          |__/                        #
+#        /##| ##  \__/  /######  /##  /#######  /######     #
+#       |__/|  ######  /##__  ##| ## /##_____/ /##__  ##    #
+#        /## \____  ##| ##  \ ##| ##| ##      | ########    #
+#       | ## /##  \ ##| ##  | ##| ##| ##      | ##_____/    #
+#       | ##|  ######/| #######/| ##|  #######|  #######    #
+#       | ## \______/ | ##____/ |__/ \_______/ \_______/    #
+#  /##  | ##          | ##                                  #
+# |  ######/          | ##                                  #
+#  \______/           |__/                                  #
+#							    #
+#                 Jorge I. Zuluaga (C) 2016		    #
+#############################################################
+# Function: jSpice kernel
+#############################################################
+
+#############################################################
+#EXTERNAL MODULES
+#############################################################
+import sys,os,inspect
+PATH=os.path.realpath(
+    os.path.abspath(os.path.split(
+        inspect.getfile(
+            inspect.currentframe()))[0]))
+sys.path.insert(0,PATH+"/../bin")
+from jspice.core import *
+
+#############################################################
+#READ CONFIGURATION FILE
+#############################################################
+CONF=loadConf(PATH+"/../")
+
+#############################################################
+#LOAD SPICE KERNELS
+#############################################################
+for kernel in glob.glob(PATH+"/../"+CONF["kernels_dir"]+"/*"):
+    spy.furnsh(kernel)
+
+#############################################################
+#INITIALIZE COMMUNICATIONS
+#############################################################
+context=zmq.Context()
+socket=context.socket(zmq.REP)
+socket.bind("tcp://*:%s"%CONF["port"])
+
+#############################################################
+#REMOVE AND ADD MODULES
+#############################################################
+#REMOVE SENSIBLE MODULES
+exec("del(%s)"%CONF["sensible_modules"])
+#ADD NEW MODULES
+for mod in CONF["numerical_modules"]:exec(mod)
+
+#############################################################
+#RECEIVE
+#############################################################
+i=0
+flog=open(PATH+"/../log/server.log","a")
+logEntry(flog,"Starting server...")
+while True:
+    cmd=socket.recv()
+    logEntry(flog,"Command received: %s"%cmd)
+    try:
+        exec(cmd)
+        logEntry(flog,"Command succesfully executed.")
+    except Exception as e:
+        logEntry(flog,"Error:\n\t"+str(e))
+    socket.send("{}".format(globals()))
+    i+=1

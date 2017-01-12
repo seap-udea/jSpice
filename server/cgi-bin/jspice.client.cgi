@@ -14,41 +14,48 @@
 #							    #
 #                 Jorge I. Zuluaga (C) 2016		    #
 #############################################################
-#Function: jSpice basic python routines
+# Function: jSpice client
 #############################################################
+
+#############################################################
+#HEADER
+#############################################################
+print "Content-Type: text/html\n\n";
 
 #############################################################
 #EXTERNAL MODULES
 #############################################################
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#SENSIBLE MODULES
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-import sys,os,inspect,zmq,cgi,glob
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#USEFUL MODULES
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-import datetime
+import sys,os,inspect
+PATH=os.path.realpath(
+    os.path.abspath(os.path.split(
+        inspect.getfile(
+            inspect.currentframe()))[0]))
+sys.path.insert(0,PATH+"/../bin")
+from jspice import *
 
 #############################################################
-#MACROS
+#READ CONFIGURATION FILE
 #############################################################
-argv=sys.argv
-stderr=sys.stderr
-stdout=sys.stdout
+CONF=loadConf(PATH+"/../")
 
 #############################################################
-#UTIL ROUTINES
+#CGI PARAMETERS
 #############################################################
-def loadConf(path):
-    conf=dict()
-    execfile(path+"/server.cfg",{},conf)
-    return conf
+params=cgi.FieldStorage();
+callback=params.getvalue("callback")
+code=params.getvalue("code")
 
-def logEntry(flog,entry,instance="root"):
-    time=datetime.datetime.utcnow().strftime("%m/%d/%y %H:%M:%S")
-    log="[%s] [%s] %s\n"%(time,instance,entry)
-    flog.write(log)
-    flog.flush()
-    #print>>stderr,log,
+#############################################################
+#EXECUTION
+#############################################################
+context=zmq.Context()
+socket=context.socket(zmq.REQ)
+socket.connect("tcp://urania.udea.edu.co:%s"%CONF["port"])
+socket.send(code);
+response=socket.recv();
+
+#############################################################
+#OUTPUT
+#############################################################
+print callback+"""({"code":"%s","configuration":"%s","response":"%s"})"""%\
+    (code,"{}".format(CONF),response)
