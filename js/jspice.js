@@ -186,12 +186,11 @@ var jspice=(function($){
     jspice.stopKernel=function(){
 	jspice.execCommand("exit(0)");
 	$(jspice.indicator).css('background','red');
-    }
-
+    };
     jspice.startKernel=function(){
-	jspice.initKernel();
-    }
-
+	handler=jspice.initKernel();
+	setTimeout(jspice.isKernelAlive,1000);
+    };
     jspice.isKernelAlive=function(){
 	handler=jspice.execCommand("jspice=True");
 	handler.fail(function(x,t,e){
@@ -201,10 +200,9 @@ var jspice=(function($){
 	handler.done(function(x,t,e){
 	    jspice.log("Kernel is alive in port "+jspice.port,"isKernelAlive Done");
 	    $(jspice.indicator).css('background','darkgreen');
+	    setTimeout(jspice.isKernelAlive,1000);
 	});
-	setTimeout(jspice.isKernelAlive,1000);
     }
-
     return jspice;
 }($));
 
