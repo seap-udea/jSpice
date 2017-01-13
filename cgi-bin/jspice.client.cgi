@@ -31,7 +31,8 @@ PATH=os.path.realpath(
         inspect.getfile(
             inspect.currentframe()))[0]))
 sys.path.insert(0,PATH+"/../bin")
-flog=open(PATH+"/../log/client.log","a")
+DIR=PATH+"/../"
+flog=open(DIR+"/log/client.log","a")
 from jspice import *
 
 #############################################################
@@ -51,11 +52,20 @@ CONF=loadConf(PATH+"/../")
 #############################################################
 #PARAMETERS
 #############################################################
-code=getArg("code")
-port=int(getArg("port"))
-timeout=float(getArg("timeout",0.1))
-callback=getArg("callback","json")
-server=getArg("server","localhost")
+params=cgi.FieldStorage();
+
+code=getArg("code",params=params)
+timeout=float(getArg("timeout",0.1,params=params))
+callback=getArg("callback","json",params=params)
+server=getArg("server","localhost",params=params)
+port=int(getArg("port",1,params=params))
+sessionid=getArg("sessionid","0"*20,params=params)
+
+if code=="jspice=True":logEntry=logEntryClean
+
+if port==1:
+    port_str=commands.getoutput("tail -n 1 %s/sessions/%s/port"%(DIR,sessionid))
+    exec("port=%s"%port_str)
 
 if checkArgs():
     print>>stderr,"You must provide port, code and timeout: jspice.client.cgi port=<port> code='<code>' [callback=<callback>] [timeout=<timeout>] [server=<server>]"
@@ -83,9 +93,8 @@ else:
     #OUTPUT
     #############################################################
     print callback+"""({"code":"%s","configuration":"%s","response":"%s"})"""%\
-        (code,"{}".format(CONF),response)
+        (code,"{}".format(CONF),response.replace("\"","\\\""))
 
     if response is None:
         logEntry(flog,"No response in port %d"%port)
-        print "No response"
         termProcess()

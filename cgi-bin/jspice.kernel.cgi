@@ -30,9 +30,14 @@ PATH=os.path.realpath(
     os.path.abspath(os.path.split(
         inspect.getfile(
             inspect.currentframe()))[0]))
-sys.path.insert(0,PATH+"/../bin")
-flog=open(PATH+"/../log/server.log","a")
+DIR=PATH+"/../"
+sys.path.insert(0,DIR+"/bin")
 from jspice.core import *
+
+#############################################################
+#LOG FILE
+#############################################################
+flog=open(DIR+"/log/server.log","a")
 
 #############################################################
 #CANCEL BEHAVIOR
@@ -46,18 +51,21 @@ signal.signal(signal.SIGINT,sigHandler)
 #############################################################
 #READ CONFIGURATION FILE
 #############################################################
-CONF=loadConf(PATH+"/../")
+CONF=loadConf(DIR)
+jspice=dict2obj({})
+jspiced=jspice.__dict__
 
 #############################################################
 #CGI PARAMETERS
 #############################################################
 params=cgi.FieldStorage();
-callback=getArg("callback","json")
+sessionid=getArg("sessionid","1",params=params)
+callback=getArg("callback","json",params=params)
 
 #############################################################
 #LOAD SPICE KERNELS
 #############################################################
-for kernel in glob.glob(PATH+"/../"+CONF["kernels_dir"]+"/*"):
+for kernel in glob.glob(DIR+"/"+CONF["kernels_dir"]+"/*"):
     spy.furnsh(kernel)
 
 #############################################################
@@ -71,12 +79,17 @@ for port in xrange(CONF["port_range"][0],CONF["port_range"][1]):
         socket=context.socket(zmq.REP)
         #With timeout:
         socket.bind("tcp://*:%d"%port)
-        logEntry(flog,"Listening in port %d"%port)
+        logEntry(flog,"Listening in port %d to sessionid %s"%(port,sessionid))
+        os.system("mkdir -p %s/sessions/%s"%(DIR,sessionid))
+        f=open("%s/sessions/%s/port"%(DIR,sessionid),"w")
+        f.write('jsonpCallback({"port":%d})'%port)
+        f.close()
         qserving=True
         break
     except zmq.error.ZMQError:
         logEntry(flog,"Error with port %d"%port)
 instance="server in port %d"%port
+
 if not qserving:
     logEntry(flog,"No available ports")
     print callback+"""({"status":"no port"})"""
@@ -99,13 +112,20 @@ i=0
 logEntry(flog,"Starting server...",instance)
 while True:
     cmd=socket.recv()
-    logEntry(flog,"Command received: %s"%cmd,instance)
+    if cmd=="jspice=True":
+        rlogEntry=logEntryClean
+    else:
+        rlogEntry=logEntry
+
+    rlogEntry(flog,"Command received: %s"%cmd,instance)
     if "exit(" in cmd:break
     try:
         exec(cmd)
-        logEntry(flog,"Command succesfully executed.",instance)
+        rlogEntry(flog,"Command succesfully executed.",instance)
     except Exception as e:
-        logEntry(flog,"Error:\n\t"+str(e))
+        rlogEntry(flog,"Error:\n\t"+str(e))
     socket.send("{}".format(globals()))
     i+=1
-logEntry(flog,"Exiting server",instance)
+
+rlogEntry(flog,"Exiting server",instance)
+print callback+"""{"kill":true}""" 

@@ -24,7 +24,7 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #SENSIBLE MODULES
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-import sys,os,inspect,zmq,cgi,glob,signal,commands
+import sys,os,inspect,zmq,cgi,glob,signal,commands,json
 from functools import update_wrapper
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,6 +54,9 @@ def logEntry(flog,entry,instance="root"):
     flog.write(log)
     flog.flush()
     #print>>stderr,log,
+
+def logEntryClean(flog,entry,instance="root"):
+    pass
 
 def termProcess():
     #os.kill(os.getpid(), signal.SIGTERM)
@@ -90,11 +93,11 @@ class Socket(zmq.Socket):
     del _meth, _timeout_wrapper
 
 OPTIONS=None
-def getArg(option,default=None):
+def getArg(option,default=None,params=None):
 
-    params=cgi.FieldStorage();
-    value=params.getvalue(option)
-    if not value is None:return value
+    if not params is None:
+        value=params.getvalue(option)
+        if not (value is None):return value
 
     global OPTIONS
     if OPTIONS is None:
@@ -126,3 +129,17 @@ def checkArgs():
             print "Missing argument %s"%arg
             qerror=True
     return qerror
+
+class dict2obj(object):
+    def __init__(self,dic={}):self.__dict__.update(dic)
+    def __add__(self,other):
+        for attr in other.__dict__.keys():
+            exec("self.%s=other.%s"%(attr,attr))
+        return self
+
+def jsonCallback(jsonp):
+    json_str="{}".format(jsonp)
+    json_str=json_str.replace("'",'"')
+    port_obj=json.loads(json_str)
+    port=port_obj['port']
+    return port

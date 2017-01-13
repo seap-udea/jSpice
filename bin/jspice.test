@@ -61,7 +61,10 @@ for mod in CONF["numerical_modules"]:exec(mod)
 #############################################################
 import sys
 
+"""
 print spy.jutcnow()
 print spy.jlocnow()
 print spy.jetnow()
 
+"""
+print spy.str2et("01/01/2017 00:00:00")
