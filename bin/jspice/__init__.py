@@ -24,7 +24,8 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #SENSIBLE MODULES
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-import sys,os,inspect,zmq,cgi,glob,signal
+import sys,os,inspect,zmq,cgi,glob,signal,commands
+from functools import update_wrapper
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #USEFUL MODULES
@@ -53,3 +54,37 @@ def logEntry(flog,entry,instance="root"):
     flog.write(log)
     flog.flush()
     #print>>stderr,log,
+
+def termProcess():
+    #os.kill(os.getpid(), signal.SIGTERM)
+    os.kill(os.getpid(), signal.SIGTERM)
+    
+class Socket(zmq.Socket):
+
+    default_timeout=100
+    
+    def __init__(self, ctx, type, default_timeout=None):
+        zmq.Socket.__init__(self, ctx, type)
+        self.default_timeout = default_timeout
+
+    def on_timeout(self):
+        termProcess()
+        return None
+
+    def _timeout_wrapper(f):
+        def wrapper(self, *args, **kwargs):
+            timeout = kwargs.pop('timeout', self.default_timeout)
+            if timeout is not None:
+                timeout = int(timeout * 1000)
+                poller = zmq.Poller()
+                poller.register(self)
+                if not poller.poll(timeout):
+                    return self.on_timeout()
+            return f(self, *args, **kwargs)
+        return update_wrapper(wrapper, f, ('__name__', '__doc__'))
+
+    for _meth in dir(zmq.Socket):
+        if _meth.startswith(('send', 'recv')):
+            locals()[_meth] = _timeout_wrapper(getattr(zmq.Socket, _meth))
+
+    del _meth, _timeout_wrapper

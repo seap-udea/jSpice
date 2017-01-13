@@ -53,6 +53,8 @@ CONF=loadConf(PATH+"/../")
 #############################################################
 params=cgi.FieldStorage();
 callback=params.getvalue("callback")
+if callback is None:
+    callback="json"
 
 #############################################################
 #LOAD SPICE KERNELS
@@ -63,16 +65,26 @@ for kernel in glob.glob(PATH+"/../"+CONF["kernels_dir"]+"/*"):
 #############################################################
 #INITIALIZE COMMUNICATIONS
 #############################################################
+qserving=False
 for port in xrange(CONF["port_range"][0],CONF["port_range"][1]):
     try:
         context=zmq.Context()
+        #Traditional: socket=context.socket(zmq.REP)
         socket=context.socket(zmq.REP)
+        #With timeout:
         socket.bind("tcp://*:%d"%port)
         logEntry(flog,"Listening in port %d"%port)
+        qserving=True
         break
     except zmq.error.ZMQError:
         logEntry(flog,"Error with port %d"%port)
 instance="server in port %d"%port
+if not qserving:
+    logEntry(flog,"No available ports")
+    print callback+"""({"status":"no port"})"""
+    exit(1)
+else:
+    print callback+"""({"status":"listening on port %d"})"""%port
 
 #############################################################
 #REMOVE AND ADD MODULES

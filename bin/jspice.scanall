@@ -1,0 +1,52 @@
+#!/usr/bin/python
+#############################################################
+#             /######            /##                        #
+#            /##__  ##          |__/                        #
+#        /##| ##  \__/  /######  /##  /#######  /######     #
+#       |__/|  ######  /##__  ##| ## /##_____/ /##__  ##    #
+#        /## \____  ##| ##  \ ##| ##| ##      | ########    #
+#       | ## /##  \ ##| ##  | ##| ##| ##      | ##_____/    #
+#       | ##|  ######/| #######/| ##|  #######|  #######    #
+#       | ## \______/ | ##____/ |__/ \_______/ \_______/    #
+#  /##  | ##          | ##                                  #
+# |  ######/          | ##                                  #
+#  \______/           |__/                                  #
+#							    #
+#                 Jorge I. Zuluaga (C) 2016		    #
+#############################################################
+# Function: jSpice kernel
+#############################################################
+
+#############################################################
+#EXTERNAL MODULES
+#############################################################
+import sys,os,inspect
+PATH=os.path.realpath(
+    os.path.abspath(os.path.split(
+        inspect.getfile(
+            inspect.currentframe()))[0]))
+sys.path.insert(0,PATH+"/../bin")
+from jspice import *
+
+#############################################################
+#CANCEL BEHAVIOR
+#############################################################
+def sigHandler(signal,frame):
+    import sys
+    sys.exit(0)
+signal.signal(signal.SIGINT,sigHandler)
+
+#############################################################
+#READ CONFIGURATION FILE
+#############################################################
+CONF=loadConf(PATH+"/../")
+
+print "Scanning ports..."
+i=0
+for port in xrange(CONF["port_range"][0],CONF["port_range"][1]):
+    if (i%20)==0:print "Testing port %d"%port
+    out=commands.getoutput("python cgi-bin/jspice.client.cgi %d 'a=1' 0.1"%port)
+    if not 'Terminated' in out:
+        print "\tTerminating server in port %d"%port
+        commands.getoutput("python cgi-bin/jspice.client.cgi %d 'exit(0)' 0.1"%port)
+    i+=1
