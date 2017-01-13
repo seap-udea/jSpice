@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<head>
+  <link rel="stylesheet" href="css/jspice.css" type="text/css">
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/jspice.js"></script>
+  <script>
+    $(document).ready(function(){
+	jspice.init("urania.udea.edu.co");
+    });
+
+    function execCode(code){
+	handler=jspice.execCommand(code);
+	handler.done(function(x,t,e){
+	    jspice.log(x);
+	    $('#results').html(JSON.stringify(x));
+	    $('#history').html($('#history').html()+"\n"+code);
+	    $('#input').val('')
+	});
+	jspice.log(code,"index");
+    }
+  </script>
+</head>
+
+<body>
+  <template id="code1">
+    a=1;
+  </template>
+
+  <center>
+    <h1>
+      jSpice Test
+    </h1>
+    <button onclick="jspice.startKernel()">Start kernel</button>
+    <button onclick="jspice.stopKernel()">Stop kernel</button>
+  </center>
+  <p>
+    Command:<input id="input" type="text" name="command" value="et=spy.str2et('01/01/2016 00:00:00')" onchange="execCode($(this).val())" size=100>
+  </p>
+  <p>
+    History:
+    <pre id="history" style="border:solid black 1px;"></pre>
+    Results:
+    <div id="results" style="border:solid black 1px;"></div>
+  </p>
+  <script>
+    $(document).ready(function(){
+    });
+  </script>
+</body>
+
+</html>
