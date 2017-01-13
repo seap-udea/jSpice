@@ -49,24 +49,17 @@ signal.signal(signal.SIGINT,sigHandler)
 CONF=loadConf(PATH+"/../")
 
 #############################################################
-#CGI PARAMETERS
+#PARAMETERS
 #############################################################
-params=cgi.FieldStorage();
-code=params.getvalue("code")
-callback=params.getvalue("callback")
+code=getArg("code")
+port=int(getArg("port"))
+timeout=float(getArg("timeout",0.1))
+callback=getArg("callback","json")
+server=getArg("server","localhost")
 
-if code is None:
-    iarg=1
-    try:
-        port=int(argv[iarg]);iarg+=1
-        code=argv[iarg];iarg+=1
-        timeout=float(argv[iarg]);iarg+=1
-        callback="json"
-    except:
-        print>>stderr,"You must provide port, code and timeout: jspice.client.cgi <port> '<code>' timeout"
-        sys.exit(1)
-else:
-    timeout=1000
+if checkArgs():
+    print>>stderr,"You must provide port, code and timeout: jspice.client.cgi port=<port> code='<code>' [callback=<callback>] [timeout=<timeout>] [server=<server>]"
+    exit(1)
 
 logEntry(flog,"Client invoked calling to port %d with timeout %.1f"%(port,timeout))
 logEntry(flog,"Client commands:\n\tCallback:%s\n\tCode:\n\t%s"%(callback,code))
@@ -77,18 +70,22 @@ logEntry(flog,"Client commands:\n\tCallback:%s\n\tCode:\n\t%s"%(callback,code))
 context=zmq.Context()
 #Traditional: socket=context.socket(zmq.REQ)
 socket=Socket(context,zmq.REQ)
-socket.connect("tcp://urania.udea.edu.co:%s"%port)
+socket.connect("tcp://%s:%s"%(server,port))
 socket.send(code);
 if "exit(" in code:
     logEntry(flog,"Exiting signal to server in port %d"%port)
+    print "Exit with code:%s"%code
 else:
     #Traditional: response=socket.recv();
     response=socket.recv(timeout=timeout);
+
     #############################################################
     #OUTPUT
     #############################################################
     print callback+"""({"code":"%s","configuration":"%s","response":"%s"})"""%\
         (code,"{}".format(CONF),response)
+
     if response is None:
         logEntry(flog,"No response in port %d"%port)
+        print "No response"
         termProcess()

@@ -52,9 +52,7 @@ CONF=loadConf(PATH+"/../")
 #CGI PARAMETERS
 #############################################################
 params=cgi.FieldStorage();
-callback=params.getvalue("callback")
-if callback is None:
-    callback="json"
+callback=getArg("callback","json")
 
 #############################################################
 #LOAD SPICE KERNELS

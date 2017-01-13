@@ -41,12 +41,27 @@ signal.signal(signal.SIGINT,sigHandler)
 #############################################################
 CONF=loadConf(PATH+"/../")
 
+#############################################################
+#ARGUMENTS
+#############################################################
+qkill=getArg("kill")
+
+#############################################################
+#SCRIPT
+#############################################################
 print "Scanning ports..."
 i=0
+j=0
 for port in xrange(CONF["port_range"][0],CONF["port_range"][1]):
-    if (i%20)==0:print "Testing port %d"%port
-    out=commands.getoutput("python cgi-bin/jspice.client.cgi %d 'a=1' 0.1"%port)
+    if (i%20)==0:print "Scanning port %d"%port
+    out=commands.getoutput("python cgi-bin/jspice.client.cgi port=%d code='a=1' timeout=0.1 callback='json'"%port)
     if not 'Terminated' in out:
-        print "\tTerminating server in port %d"%port
-        commands.getoutput("python cgi-bin/jspice.client.cgi %d 'exit(0)' 0.1"%port)
+        j+=1
+        print "\tServer listening in port %d"%port
+        if qkill:
+            print "\t\tTerminating server in port %d"%port
+            commands.getoutput("python cgi-bin/jspice.client.cgi port=%d code='exit(0)' timeout=0.1 callback='json'"%port)
     i+=1
+
+if j>0:print "%d ports are active"%j
+else:print "No ports are active"

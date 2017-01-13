@@ -88,3 +88,41 @@ class Socket(zmq.Socket):
             locals()[_meth] = _timeout_wrapper(getattr(zmq.Socket, _meth))
 
     del _meth, _timeout_wrapper
+
+OPTIONS=None
+def getArg(option,default=None):
+
+    params=cgi.FieldStorage();
+    value=params.getvalue(option)
+    if not value is None:return value
+
+    global OPTIONS
+    if OPTIONS is None:
+        OPTIONS={}
+        for i in xrange(1,len(argv[1:])+1):
+            opts=argv[i]
+            if "=" in opts:
+                parts=opts.split("=")
+                opt=parts[0]
+                val=parts[1:]
+                if type(val)==list:val="=".join(val)
+            else:
+                opt=opts
+                val=True
+            OPTIONS[opt]=val
+
+    if not (option in OPTIONS.keys()):
+        if default is None:
+            OPTIONS[option]=False
+        else:
+            OPTIONS[option]=default
+
+    return OPTIONS[option]
+
+def checkArgs():
+    qerror=False
+    for arg in OPTIONS.keys():
+        if not OPTIONS[arg]:
+            print "Missing argument %s"%arg
+            qerror=True
+    return qerror
