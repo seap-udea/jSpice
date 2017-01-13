@@ -74,7 +74,7 @@ var jspice=(function($){
 	//Set module properties
 	jspice.server=server;
 	jspice.http="http://"+jspice.server+"/jSpice"
-	jspice.kernel=jspice.http+"/cgi-bin/jspice.kernel.cgi";
+	jspice.kernel=jspice.http+"/cgi-bin/jspice.launchkernel.cgi";
 	jspice.client=jspice.http+"/cgi-bin/jspice.client.cgi";
 	jspice.log(jspice.server,"init");
 	jspice.log(jspice.http,"init");
@@ -85,6 +85,8 @@ var jspice=(function($){
 	    html('Powered by jSpice').
 	    appendTo($("body"));
 
+	jspice.initKernel();
+	/*
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//INITIAL CHECKS
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -145,6 +147,7 @@ var jspice=(function($){
 		$(jspice.indicator).css('background','darkgreen');
 	    });
 	});
+	*/
     };
 
     //////////////////////////////////////////////////////////////
@@ -156,9 +159,16 @@ var jspice=(function($){
 	    data:{sessionid:jspice.sessionid},
 	    type:'POST',
 	    dataType:'jsonp',
+	    cache:false,
 	    headers:{'Access-Control-Allow-Origin': '*'},
 	});
-	jspice.isKernelAlive();
+	//jspice.isKernelAlive();
+	handler.fail(function(x,t,e){
+	    jspice.log(x);
+	});
+	handler.done(function(x,t,e){
+	    jspice.log(x);
+	});
 	return handler;
     }
 

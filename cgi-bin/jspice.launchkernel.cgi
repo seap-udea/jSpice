@@ -67,7 +67,7 @@ callback=getArg("callback","json",params=params)
 #############################################################
 #os.spawnl(os.P_NOWAIT,"ls -R / &> /tmp/ls")
 #print "Listo"
-cmd="python cgi-bin/jspice.kernel.cgi callback=%s sessionid=%s"%(callback,sessionid)
+cmd="python %s/cgi-bin/jspice.kernel.cgi callback=%s sessionid=%s"%(DIR,callback,sessionid)
 fnull=open(os.devnull,"w")
-subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=fnull,stderr=subprocess.STDOUT)
-print callback+"""({"cmd":"%s"})"""%cmd
+popen=subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=fnull,stderr=subprocess.STDOUT)
+print callback+"""({"cmd":"%s","pid":"%s"})"""%(cmd,popen.pid)
