@@ -44,6 +44,7 @@ var jspice=(function($){
 	    jspice.log("Session recovered","init");
 	}
 	jspice.log("Session ID:"+jspice.sessionid,"init");
+	$('#sessionid').html(jspice.sessionid)
 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//CONSTRUCTOR PARAMETERS
@@ -66,22 +67,19 @@ var jspice=(function($){
 	var _server_http="http://"+jspice.server+"/jSpice"
 	var _slave_http="http://"+jspice.slave+"/jSpice"
 	var _session_cgi=_server_http+"/cgi-bin/jspice.session.cgi";
-	var _client_cgi=_server_http+"/cgi-bin/jspice.client.cgi";
+	var _client_cgi=_slave_http+"/cgi-bin/jspice.executor.cgi";
 	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	//INITIALIZE SESSION
+	//START SESSION
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	/*
 	var _session_handler=jspice.run({
 	    url:_session_cgi,
-	    data:{sessionid:jspice.sessionid},
+	    data:{sessionid:jspice.sessionid,slave:jspice.slave,port:5501},
 	    type:'POST',
 	});
 	_session_handler.done(function(x,t,e){
-	    jspice.log(x.pid);
+	    jspice.log(x);
 	});
-	*/
-	
 
 	/*
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

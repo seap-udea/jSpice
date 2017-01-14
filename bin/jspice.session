@@ -14,13 +14,13 @@
 #							    #
 #                 Jorge I. Zuluaga (C) 2016		    #
 #############################################################
-# Function: jSpice kernel
+# Function: jSpice session
 #############################################################
 
 #############################################################
 #HEADER
 #############################################################
-print "Content-Type: text/html";
+print "Content-Type: text/html\n\n";
 
 #############################################################
 #EXTERNAL MODULES
@@ -40,7 +40,7 @@ from jspice.core import *
 params=cgi.FieldStorage();
 sessionid=getArg("sessionid","0"*20,params=params)
 port=int(getArg("port",5500,params=params))
-server=getArg("server","127.0.0.1",params=params)
+slave=getArg("slave","127.0.0.1",params=params)
 os.system("mkdir -p %s/sessions/%s"%(DIR,sessionid))
 
 #############################################################
@@ -48,9 +48,10 @@ os.system("mkdir -p %s/sessions/%s"%(DIR,sessionid))
 #############################################################
 def sigHandler(signal,frame):
     import sys
-    logEntry(flog,"Terminating server in port %d"%port)
+    logEntry(flog,"Terminating session in port %d"%port,sessionid)
+    unregisterSession(sessionid,DIR,DIR+"/sessions.db")
     sys.exit(0)
-signal.signal(signal.SIGINT,sigHandler)
+for sig in SIGNALS:signal.signal(sig,sigHandler)
 
 #############################################################
 #READ CONFIGURATION FILE
@@ -71,9 +72,9 @@ try:
     context=zmq.Context()
     context=zmq.Context()
     socket=context.socket(zmq.REP)
-    socket.bind("tcp://%s:%d"%(server,port))
+    socket.bind("tcp://%s:%d"%(slave,port))
     qserv=True
-    logEntry(flog,"Starting session in server %s for session %s listening in port %d"%(server,
+    logEntry(flog,"Starting session for slave %s for session %s listening in port %d"%(slave,
                                                                                        sessionid,
                                                                                        port),
              sessionid)
@@ -87,6 +88,7 @@ except:
     
     # Getting reserved ports 
     sports=[int(port[0]) for port in sqlExec("select port from sessions",DIR+"/sessions.db")]
+    print sports
 
     # Check ports
     for port in ports:
@@ -94,11 +96,11 @@ except:
             context=zmq.Context()
             context=zmq.Context()
             socket=context.socket(zmq.REP)
-            socket.bind("tcp://%s:%d"%(server,port))
+            socket.bind("tcp://%s:%d"%(slave,port))
             if port in sports:continue
-            logEntry(flog,"Starting session in server %s for session %s listening in port %d"%(server,
-                                                                                               sessionid,
-                                                                                               port),
+            logEntry(flog,"Starting session in slave %s for session %s listening in port %d"%(slave,
+                                                                                              sessionid,
+                                                                                              port),
                      sessionid)
             qserv=True
             break
@@ -108,6 +110,23 @@ except:
 if not qserv:
     port=-1
     logEntry(flog,"No ports available",sessionid)
+
+f=open(DIR+"/sessions/%s/port"%sessionid,"w")
+f.write("""callbackJsonp({"port":%d})\n"""%port)
+f.close()
+
+#############################################################
+#REGISTER SESSION
+#############################################################
+timestart=int(time.mktime(datetime.datetime.now().timetuple()))
+pid=os.getpid()
+session=dict(sessionid=sessionid,
+             port=port,
+             slave=slave,
+             timestart=timestart,
+             pid=pid)
+logEntry(flog,"Registering session %s in port %d at time %d with pid %s"%(sessionid,port,timestart,pid),sessionid)
+registerSession(session,DIR+"/sessions.db")
 
 #############################################################
 #REMOVE AND ADD MODULES
@@ -124,7 +143,7 @@ kernels=glob.glob(DIR+"/"+CONF["kernels_dir"]+"/*")
 logEntry(flog,"Loading kernels:"+"{}".format(kernels),sessionid)
 for kernel in kernels:
     spy.furnsh(kernel)
-logEntry(flog,"Kernels load",sessionid)
+logEntry(flog,"SPICE kernels load",sessionid)
 
 #############################################################
 #RECEIVE
@@ -145,4 +164,5 @@ while True:
         rlogEntry(flog,"Error:\n\t"+str(e))
     socket.send("{}".format(globals()))
 
-rlogEntry(flog,"Exiting server",sessionid)
+unregisterSession(sessionid,DIR,DIR+"/sessions.db")
+rlogEntry(flog,"Exiting session",sessionid)

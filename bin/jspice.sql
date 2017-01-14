@@ -61,14 +61,31 @@ with connect:
     db=connect.cursor()
 
     if action=="create":
-        logEntry(flog,"Creating database","create")
-        print "Creating sessions table..."
+        logEntry(flog,"Creating tables","create")
+        print "Creating tables..."
+        
+        #Sessions table
         db.execute("drop table if exists sessions")
         db.execute("""
         create table sessions(
         sessionid varchar(20),
         port varchar(6),
         timestart varchar(50),
+        pid varchar(6),
+        slave varchar(50),
         primary key (sessionid)
+        );
+        """)
+
+        #Statistics table
+        db.execute("drop table if exists statistics")
+        db.execute("""
+        create table statistics(
+        sessionid varchar(20),
+        port varchar(6),
+        slave varchar(50),
+        timelife varchar(50),
+        ncommands varchar(10),
+        memory varchar(10)
         );
         """)

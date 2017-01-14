@@ -25,7 +25,7 @@
 #SENSIBLE MODULES
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import sys,os,inspect,zmq,cgi,glob,signal
-import commands,json,shlex,subprocess
+import commands,json,shlex,subprocess,time
 import sqlite3 as sqlite
 from functools import update_wrapper
 
@@ -47,6 +47,8 @@ exit=sys.exit
 CONF={}
 DB=None
 CON=None
+SIGNALS=[signal.SIGABRT,signal.SIGFPE,signal.SIGILL,
+         signal.SIGINT,signal.SIGSEGV,signal.SIGTERM]
 
 #############################################################
 #UTIL ROUTINES
@@ -165,3 +167,29 @@ def sqlExec(sql,dbfile):
     CON.commit()
     rows=DB.fetchall()
     return rows
+
+def registerSession(session,dbfile):
+    fields=""
+    values=""
+    for key in session.keys():
+        fields+=key+","
+        values+="'%s',"%(str(session[key]))
+    fields=fields.strip(",")
+    values=values.strip(",")
+    sqlExec("insert or replace into sessions (%s) values (%s)"%(fields,values),dbfile)
+
+def unregisterSession(sessionid,sessdir,dbfile):
+    out=sqlExec("select timestart,pid,port,slave from sessions where sessionid='%s'"%sessionid,dbfile)
+    timestart=int(out[0][0])
+    pid=out[0][1]
+    port=out[0][2]
+    slave=out[0][3]
+    timeend=int(time.mktime(datetime.datetime.now().timetuple()))
+    timelife=timeend-timestart
+    vmsize=commands.getoutput("cat /proc/%s/status |grep VmRSS"%pid)
+    ncom=commands.getoutput("grep 'Command received' %s/sessions/%s/session.log"%(sessdir,sessionid))
+    print ncom
+    mem=vmsize.split()[1]
+    sqlExec("insert into statistics (sessionid,port,timelife,ncommands,memory,slave) values ('%s','%s','%s','%s','%s','%s')"%(str(sessionid),str(port),str(timelife),str(ncom),str(mem),str(slave)),dbfile)
+    sqlExec("delete from sessions where sessionid='%s'"%sessionid,dbfile)
+    

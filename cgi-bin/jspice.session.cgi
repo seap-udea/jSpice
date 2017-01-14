@@ -20,7 +20,7 @@
 #############################################################
 #HEADER
 #############################################################
-print "Content-Type: text/html";
+print "Content-Type: text/html\n\n";
 
 #############################################################
 #EXTERNAL MODULES
@@ -46,7 +46,7 @@ def sigHandler(signal,frame):
     import sys
     logEntry(flog,"Terminating server in port %d"%port)
     sys.exit(0)
-signal.signal(signal.SIGINT,sigHandler)
+for sig in SIGNALS:signal.signal(sig,sigHandler)
 
 #############################################################
 #READ CONFIGURATION FILE
@@ -59,14 +59,28 @@ loadConf(DIR+"/jspice.cfg")
 params=cgi.FieldStorage();
 sessionid=getArg("sessionid","0"*20,params=params)
 callback=getArg("callback","callbackJsonp",params=params)
+port=int(getArg("port",5500,params=params))
+slave=getArg("slave","127.0.0.1",params=params)
+
+#############################################################
+#CHECK IF SESSION IS REGISTERED
+#############################################################
+results=sqlExec("select port,pid from sessions where sessionid='%s'"%sessionid,DIR+"/sessions.db")
+if len(results)>0:
+    port=int(results[0][0])
+    pid=int(results[0][1])
+    print callback+"""({"pid":"%s","port":%d})"""%(pid,port)
+    exit(0)
 
 #############################################################
 #LAUNCH SESSION
 #############################################################
-cmd="%s %s/bin/jspice.session sessionid=%s"%(CONF["python"],DIR,sessionid)
+cmd="%s %s/bin/jspice.session sessionid=%s port=%d slave=%s"%(CONF["python"],DIR,sessionid,port,slave)
 logEntry(flog,"Executing cmd:"+cmd)
 
-sys.exit(0)
 ferror=open(DIR+"/log/errors.log","a")
 popen=subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=ferror,stderr=subprocess.STDOUT)
-print callback+"""({"cmd":"%s","pid":"%s"})"""%(cmd,popen.pid)
+time.sleep(1)
+exec(commands.getoutput("cat %s/sessions/%s/port"%(DIR,sessionid)),globals())
+port=int(CONF["port"])
+print callback+"""({"pid":"%s","port":%d})"""%(popen.pid,port)

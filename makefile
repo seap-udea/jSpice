@@ -9,6 +9,9 @@ cleancode:
 
 clean:cleancrap cleancode
 
+perms:
+	chown -R www-data.www-data .
+
 commit:
 	@echo "Commiting..."
 	@-git commit -am "Commit"
@@ -18,7 +21,3 @@ pull:
 	@-git reset --hard HEAD
 	@-git pull
 
-unpack:
-	@echo "Unpacking large kernels..."
-	@cat util/kernels/de430bsp/* > util/kernels/de430.bsp
-	@echo "Done."
