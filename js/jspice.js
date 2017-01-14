@@ -26,58 +26,44 @@ var jspice=(function($){
     var jspice={
 	version: '0.1',
 	sessionid:'',
-	instance:'root'
+	slave:'',
+	server:'',
     };
 
     //////////////////////////////////////////////////////////////
-    //UTIL
-    //////////////////////////////////////////////////////////////
-    function clearResponse(response){
-	response=response.replace(/'/g,'"');
-	response=response.replace(/<stdout>/g,'');
-	response=response.replace(/<stderr>/g,'');
-	response=response.replace(/<[^<]+>/g,'""');
-	response=response.replace(/None/g,'""');
-	response=response.replace(/True/g,'true');
-	response=response.replace(/False/g,'false');
-	response=response.replace(/\n/g,' ');
-	return response;
-    }
-
-    function updateKernel(response){
-	response=clearResponse(response);
-	jspice.log(response,"update");
-	jspice.kernel=JSON.parse(response);
-    }
-    
-    //////////////////////////////////////////////////////////////
     //JSPICE INITIALIZE
     //////////////////////////////////////////////////////////////
-    jspice.init=function(server="localhost"){
+    jspice.init=function(slave="localhost",server="localhost"){
 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//SESSION INFORMATION
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-	//Check sessionid cookie
 	jspice.sessionid=readCookie("sessionid");
 	if(!jspice.sessionid){
 	    jspice.sessionid=randomString(20);
 	    createCookie("sessionid",jspice.sessionid,1);
+	    jspice.log("New session","init");
+	}else{
+	    jspice.log("Session recovered","init");
 	}
-	jspice.instance=jspice.sessionid
 	jspice.log("Session ID:"+jspice.sessionid,"init");
 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//INITIALIZE
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	//Set module properties
 	jspice.server=server;
-	jspice.http="http://"+jspice.server+"/jSpice"
+	jspice.server_http="http://"+jspice.server+"/jSpice"
+
+	jspice.slave=location.host;
+	jspice.slave_http="http://"+jspice.slave+"/jSpice"
+
 	jspice.kernel=jspice.http+"/cgi-bin/jspice.launchkernel.cgi";
 	jspice.client=jspice.http+"/cgi-bin/jspice.client.cgi";
-	jspice.log(jspice.server,"init");
-	jspice.log(jspice.http,"init");
+
+	jspice.log("Server:"+jspice.server,"init");
+	jspice.log("Slave:"+jspice.slave,"init");
+
+	/*
 
 	jspice.indicator=document.createElement('div');
 	$(jspice.indicator).
@@ -86,7 +72,6 @@ var jspice=(function($){
 	    appendTo($("body"));
 
 	jspice.initKernel();
-	/*
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//INITIAL CHECKS
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -186,7 +171,7 @@ var jspice=(function($){
 	return handler;
     };
 
-    jspice.log=function(text,section="main",instance=jspice.instance){
+    jspice.log=function(text,section="main",instance=jspice.sessionid){
 	var now=new Date();
 	console.log("["+now.toLocaleString()+"] "+
 		    "["+instance+"] "+
@@ -213,6 +198,28 @@ var jspice=(function($){
 	    setTimeout(jspice.isKernelAlive,1000);
 	});
     }
+
+    //////////////////////////////////////////////////////////////
+    //UTIL
+    //////////////////////////////////////////////////////////////
+    function clearResponse(response){
+	response=response.replace(/'/g,'"');
+	response=response.replace(/<stdout>/g,'');
+	response=response.replace(/<stderr>/g,'');
+	response=response.replace(/<[^<]+>/g,'""');
+	response=response.replace(/None/g,'""');
+	response=response.replace(/True/g,'true');
+	response=response.replace(/False/g,'false');
+	response=response.replace(/\n/g,' ');
+	return response;
+    }
+
+    function updateKernel(response){
+	response=clearResponse(response);
+	jspice.log(response,"update");
+	jspice.kernel=JSON.parse(response);
+    }
+
     return jspice;
 }($));
 
