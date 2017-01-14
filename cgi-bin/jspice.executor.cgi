@@ -32,7 +32,6 @@ PATH=os.path.realpath(
             inspect.currentframe()))[0]))
 sys.path.insert(0,PATH+"/../bin")
 DIR=PATH+"/../"
-flog=open(DIR+"/log/client.log","a")
 from jspice import *
 
 #############################################################
@@ -47,38 +46,33 @@ signal.signal(signal.SIGINT,sigHandler)
 #############################################################
 #READ CONFIGURATION FILE
 #############################################################
-CONF=loadConf(PATH+"/../")
+loadConf(DIR+"/jspice.cfg")
 
 #############################################################
 #PARAMETERS
 #############################################################
 params=cgi.FieldStorage();
 
+# Mandatory
 code=getArg("code",params=params)
+if code=="jspice=True":logEntry=logEntryClean
+port=int(getArg("port",params=params))
+
+# Optional
 timeout=float(getArg("timeout",0.1,params=params))
 callback=getArg("callback","json",params=params)
-server=getArg("server","localhost",params=params)
-port=int(getArg("port",1,params=params))
+server=getArg("server","127.0.0.1",params=params)
 sessionid=getArg("sessionid","0"*20,params=params)
 
-if code=="jspice=True":logEntry=logEntryClean
-
-if port==1:
-    port_str=commands.getoutput("tail -n 1 %s/sessions/%s/port"%(DIR,sessionid))
-    exec("port=%s"%port_str)
-
-if checkArgs():
-    print>>stderr,"You must provide port, code and timeout: jspice.client.cgi port=<port> code='<code>' [callback=<callback>] [timeout=<timeout>] [server=<server>]"
-    exit(1)
-
-logEntry(flog,"Client invoked calling to port %d with timeout %.1f"%(port,timeout))
-logEntry(flog,"Client commands:\n\tCallback:%s\n\tCode:\n\t%s"%(callback,code))
+sessdir="%s/sessions/%s/"%(DIR,sessionid)
+flog=open(sessdir+"/executor.log","a")
+logEntry(flog,"Executor invoked calling to port %d of server %s with timeout %.1f"%(port,server,timeout),sessionid)
+logEntry(flog,"Executor commands:\n\tCallback:%s\n\tCode:\n\t%s"%(callback,code),sessionid)
 
 #############################################################
 #EXECUTION
 #############################################################
 context=zmq.Context()
-#Traditional: socket=context.socket(zmq.REQ)
 socket=Socket(context,zmq.REQ)
 socket.connect("tcp://%s:%s"%(server,port))
 socket.send(code);
@@ -86,7 +80,6 @@ if "exit(" in code:
     logEntry(flog,"Exiting signal to server in port %d"%port)
     print "Exit with code:%s"%code
 else:
-    #Traditional: response=socket.recv();
     response=socket.recv(timeout=timeout);
 
     #############################################################

@@ -187,8 +187,7 @@ def unregisterSession(sessionid,sessdir,dbfile):
     timeend=int(time.mktime(datetime.datetime.now().timetuple()))
     timelife=timeend-timestart
     vmsize=commands.getoutput("cat /proc/%s/status |grep VmRSS"%pid)
-    ncom=commands.getoutput("grep 'Command received' %s/sessions/%s/session.log"%(sessdir,sessionid))
-    print ncom
+    ncom=commands.getoutput("grep 'Command received' %s/sessions/%s/session.log |wc -l"%(sessdir,sessionid))
     mem=vmsize.split()[1]
     sqlExec("insert into statistics (sessionid,port,timelife,ncommands,memory,slave) values ('%s','%s','%s','%s','%s','%s')"%(str(sessionid),str(port),str(timelife),str(ncom),str(mem),str(slave)),dbfile)
     sqlExec("delete from sessions where sessionid='%s'"%sessionid,dbfile)

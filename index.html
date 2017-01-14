@@ -5,7 +5,14 @@
   <script type="text/javascript" src="js/jspice.js"></script>
   <script>
     $(document).ready(function(){
-	jspice.init({server:"200.24.17.194",kerneltype:"unique"});
+	jspice.init({
+	    server_fqdn:"urania.udea.edu.co",
+	    slave_fqdn:"urania.udea.edu.co",
+	    kerneltype:"unique"
+	})
+	    .done(function(d,t,e){
+		jspice.log(["Initialization:",d]);
+	    })
     });
 
     function execCode(code){

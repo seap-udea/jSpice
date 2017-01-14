@@ -52,7 +52,9 @@ var jspice=(function($){
 	parameters=$.extend(
 	    {
 		//Default parameters
+		server_fqdn:"localhost",
 		server:"127.0.0.1",
+		slave_fqdn:"localhost",
 		slave:"127.0.0.1",
 		sessiontype:"dynamic"
 	    },parameters);
@@ -64,22 +66,56 @@ var jspice=(function($){
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//JSPICE PRIVATE PROPERTIES
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	var _server_http="http://"+jspice.server+"/jSpice"
-	var _slave_http="http://"+jspice.slave+"/jSpice"
-	var _session_cgi=_server_http+"/cgi-bin/jspice.session.cgi";
-	var _client_cgi=_slave_http+"/cgi-bin/jspice.executor.cgi";
+	var _server_http="http://"+jspice.server_fqdn+"/jSpice"
+	var _slave_http="http://"+jspice.slave_fqdn+"/jSpice"
+	jspice.session_cgi=_server_http+"/cgi-bin/jspice.session.cgi";
+	jspice.executor_cgi=_slave_http+"/cgi-bin/jspice.executor.cgi";
 	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//START SESSION
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	var _session_handler=jspice.run({
-	    url:_session_cgi,
-	    data:{sessionid:jspice.sessionid,slave:jspice.slave,port:5501},
+	    url:jspice.session_cgi,
+	    data:{sessionid:jspice.sessionid,
+		  slave:jspice.slave,
+		  port:5501},
 	    type:'POST',
+	    success:function(d){
+		jspice.port=d.port;
+	    }
 	});
+
+	//Initialize
 	_session_handler.done(function(x,t,e){
-	    jspice.log(x);
+
+	    //Place indicator
+	    jspice.indicator=document.createElement('div');
+	    $(jspice.indicator).
+		addClass('jsp jsp-indicator').
+		html('Powered by jSpice').
+		appendTo($("body"));
+
+	    //jspice.healthCheck();
+	    
+	    //Launch health checker
+	    jspice.run({
+		url:jspice.executor_cgi,
+		data:{sessionid:jspice.sessionid,
+		      server:jspice.server,
+		      port:jspice.port,
+		      //code:"f=lambda x:np.exp(x)",
+		      code:"y=f(4)"
+		     },
+		type:'POST'
+	    }).done(function(d,t,e){
+		jspice.log(d);
+		var djson=clearResponse(d.response);
+		jspice.log(djson);
+		var x=JSON.parse(djson);
+		jspice.log(x);
+	    });
 	});
+	return _session_handler;
 
 	/*
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,12 +127,6 @@ var jspice=(function($){
 
 	jspice.log("Server:"+jspice.server,"init");
 	jspice.log("Slave:"+jspice.slave,"init");
-
-	jspice.indicator=document.createElement('div');
-	$(jspice.indicator).
-	    addClass('jsp jsp-indicator').
-	    html('Powered by jSpice').
-	    appendTo($("body"));
 
 	jspice.initKernel();
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -174,41 +204,8 @@ var jspice=(function($){
 		dataType:'jsonp',
 		headers:{'Access-Control-Allow-Origin': '*'},
 	    },parameters);
-	jspice.log(["AJAX Parameters:",parameters]);
+	//jspice.log(["AJAX Parameters:",parameters]);
 	var handler=$.ajax(parameters);
-	return handler;
-    };
-
-    jspice.initKernel=function(){
-	handler=$.ajax({
-	    url:jspice.kernel,
-	    data:{sessionid:jspice.sessionid},
-	    type:'POST',
-	    dataType:'jsonp',
-	    cache:false,
-	    headers:{'Access-Control-Allow-Origin': '*'},
-	});
-	//jspice.isKernelAlive();
-	handler.fail(function(x,t,e){
-	    jspice.log(x);
-	});
-	handler.done(function(x,t,e){
-	    jspice.log(x);
-	});
-	return handler;
-    }
-
-    jspice.execCommand=function(code){
-	handler=$.ajax({
-	    url:jspice.client,
-	    data:{code:code,
-		  sessionid:jspice.sessionid,
-		  port:jspice.port},
-	    type:"POST",
-	    timeout:1000,
-	    dataType:'jsonp',
-	    headers:{'Access-Control-Allow-Origin': '*'},
-	});
 	return handler;
     };
 
@@ -230,25 +227,25 @@ var jspice=(function($){
 		    "["+section+"] "+message);
     };
 
-    jspice.stopKernel=function(){
-	jspice.execCommand("exit(0)");
-	$(jspice.indicator).css('background','red');
-    };
-    jspice.startKernel=function(){
-	handler=jspice.initKernel();
-	setTimeout(jspice.isKernelAlive,1000);
-    };
-    jspice.isKernelAlive=function(){
-	handler=jspice.execCommand("jspice=True");
-	handler.fail(function(x,t,e){
-	    jspice.log("Kernel is dead","isKernelAlive Fail");
-	    $(jspice.indicator).css('background','red');
-	});
-	handler.done(function(x,t,e){
-	    jspice.log("Kernel is alive in port "+jspice.port,"isKernelAlive Done");
-	    $(jspice.indicator).css('background','darkgreen');
-	    setTimeout(jspice.isKernelAlive,1000);
-	});
+    jspice.healthCheck=function(){
+	jspice.run({
+	    url:jspice.executor_cgi,
+	    data:{sessionid:jspice.sessionid,
+		  server:jspice.server,
+		  port:jspice.port,
+		  code:"jspice=True"
+		 },
+	    type:"POST"
+	})
+		   .done(function(d,t,e){
+		       jspice.log("Session healthy");
+		       $(jspice.indicator).css('background','blue');
+		   })
+		   .fail(function(d,t,e){
+		       jspice.log("Session passed away");
+		       $(jspice.indicator).css('background','red');
+		   });
+	//setTimeout(jspice.healthCheck,1000);
     }
 
     //////////////////////////////////////////////////////////////
@@ -256,8 +253,7 @@ var jspice=(function($){
     //////////////////////////////////////////////////////////////
     function clearResponse(response){
 	response=response.replace(/'/g,'"');
-	response=response.replace(/<stdout>/g,'');
-	response=response.replace(/<stderr>/g,'');
+	response=response.replace(/<\w+>/g,'');
 	response=response.replace(/<[^<]+>/g,'""');
 	response=response.replace(/None/g,'""');
 	response=response.replace(/True/g,'true');

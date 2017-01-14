@@ -145,24 +145,35 @@ for kernel in kernels:
     spy.furnsh(kernel)
 logEntry(flog,"SPICE kernels load",sessionid)
 
+print "Listening in port:",port
 #############################################################
 #RECEIVE
 #############################################################
-while True:
-    cmd=socket.recv()
-    if cmd=="jspice=True":
-        rlogEntry=logEntryClean
-    else:
-        rlogEntry=logEntry
+def run():
+    while True:
+        cmd=socket.recv()
+        if cmd=="jspice=True":
+            rlogEntry=logEntryClean
+        else:
+            rlogEntry=logEntry
 
-    rlogEntry(flog,"Command received: %s"%cmd,sessionid)
-    if "exit(" in cmd:break
-    try:
-        exec(cmd)
-        rlogEntry(flog,"Command succesfully executed.",sessionid)
-    except Exception as e:
-        rlogEntry(flog,"Error:\n\t"+str(e))
-    socket.send("{}".format(globals()))
+        rlogEntry(flog,"Command received: %s"%cmd,sessionid)
+        if "exit(" in cmd:break
+        try:
+            exec(cmd)
+            print cmd
+            rlogEntry(flog,"Command succesfully executed.",sessionid)
+        except Exception as e:
+            rlogEntry(flog,"Error:\n\t"+str(e))
 
-unregisterSession(sessionid,DIR,DIR+"/sessions.db")
-rlogEntry(flog,"Exiting session",sessionid)
+        del(cmd,rlogEntry)
+        print locals()
+        msg="{}".format(locals())
+        msg=msg.replace("\n","")
+        socket.send(msg)
+        del(msg)
+
+    unregisterSession(sessionid,DIR,DIR+"/sessions.db")
+    rlogEntry(flog,"Exiting session",sessionid)
+
+run()
