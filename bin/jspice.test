@@ -30,9 +30,23 @@ sys.path.insert(0,DIR+"/bin")
 from jspice.core import *
 
 #############################################################
+#LOG FILE
+#############################################################
+flog=open(DIR+"/log/test.log","a")
+
+#############################################################
+#CANCEL BEHAVIOR
+#############################################################
+def sigHandler(signal,frame):
+    import sys
+    logEntry(flog,"Terminating test")
+    sys.exit(0)
+signal.signal(signal.SIGINT,sigHandler)
+
+#############################################################
 #READ CONFIGURATION FILE
 #############################################################
-CONF=loadConf(DIR+"/jspice.cfg")
+loadConf(DIR+"/jspice.cfg")
 
 #############################################################
 #LOAD SPICE KERNELS

@@ -20,7 +20,7 @@
 #############################################################
 #HEADER
 #############################################################
-print "Content-Type: text/html\n\n";
+print "Content-Type: text/html";
 
 #############################################################
 #EXTERNAL MODULES
@@ -37,7 +37,7 @@ from jspice.core import *
 #############################################################
 #LOG FILE
 #############################################################
-flog=open(DIR+"/log/server.log","a")
+flog=open(DIR+"/log/sessions.log","a")
 
 #############################################################
 #CANCEL BEHAVIOR
@@ -51,23 +51,22 @@ signal.signal(signal.SIGINT,sigHandler)
 #############################################################
 #READ CONFIGURATION FILE
 #############################################################
-CONF=loadConf(DIR)
-jspice=dict2obj({})
-jspiced=jspice.__dict__
+loadConf(DIR+"/jspice.cfg")
 
 #############################################################
 #CGI PARAMETERS
 #############################################################
 params=cgi.FieldStorage();
-sessionid=getArg("sessionid","1",params=params)
-callback=getArg("callback","json",params=params)
+sessionid=getArg("sessionid","0"*20,params=params)
+callback=getArg("callback","callbackJsonp",params=params)
 
 #############################################################
 #LAUNCH SESSION
 #############################################################
-#os.spawnl(os.P_NOWAIT,"ls -R / &> /tmp/ls")
-#print "Listo"
-cmd="python %s/bin/jspice.session callback=%s sessionid=%s"%(DIR,callback,sessionid)
-fnull=open(os.devnull,"w")
-popen=subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=fnull,stderr=subprocess.STDOUT)
+cmd="%s %s/bin/jspice.session sessionid=%s"%(CONF["python"],DIR,sessionid)
+logEntry(flog,"Executing cmd:"+cmd)
+
+sys.exit(0)
+ferror=open(DIR+"/log/errors.log","a")
+popen=subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=ferror,stderr=subprocess.STDOUT)
 print callback+"""({"cmd":"%s","pid":"%s"})"""%(cmd,popen.pid)

@@ -35,19 +35,29 @@ from functools import update_wrapper
 import datetime
 
 #############################################################
-#MACROS
+#MACROS AND GLOBAL VARIABLES
 #############################################################
+#Macros
 argv=sys.argv
 stderr=sys.stderr
 stdout=sys.stdout
 exit=sys.exit
 
+#Globals
+CONF={}
+DB=None
+CON=None
+
 #############################################################
 #UTIL ROUTINES
 #############################################################
+def callbackJsonp(parameters):
+    global CONF
+    CONF.update(parameters)
+
 def loadConf(filecfg):
     conf=dict()
-    execfile(filecfg,{},conf)
+    execfile(filecfg,globals(),conf)
     return conf
 
 def logEntry(flog,entry,instance="root"):
@@ -145,3 +155,13 @@ def jsonCallback(jsonp):
     port_obj=json.loads(json_str)
     port=port_obj['port']
     return port
+
+def sqlExec(sql,dbfile):
+    global CON,DB
+    if DB is None:
+        CON=sqlite.connect(dbfile)
+        DB=CON.cursor()
+    DB.execute(sql)
+    CON.commit()
+    rows=DB.fetchall()
+    return rows

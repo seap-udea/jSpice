@@ -51,8 +51,8 @@ var jspice=(function($){
 	parameters=$.extend(
 	    {
 		//Default parameters
-		server:location.host,
-		slave:location.host,
+		server:"127.0.0.1",
+		slave:"127.0.0.1",
 		sessiontype:"dynamic"
 	    },parameters);
 	jspice.log(["Parameters:",parameters],"init");
@@ -71,6 +71,7 @@ var jspice=(function($){
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//INITIALIZE SESSION
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	/*
 	var _session_handler=jspice.run({
 	    url:_session_cgi,
 	    data:{sessionid:jspice.sessionid},
@@ -79,6 +80,8 @@ var jspice=(function($){
 	_session_handler.done(function(x,t,e){
 	    jspice.log(x.pid);
 	});
+	*/
+	
 
 	/*
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

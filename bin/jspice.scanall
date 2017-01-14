@@ -25,7 +25,8 @@ PATH=os.path.realpath(
     os.path.abspath(os.path.split(
         inspect.getfile(
             inspect.currentframe()))[0]))
-sys.path.insert(0,PATH+"/../bin")
+DIR=PATH+"/../"
+sys.path.insert(0,DIR+"/bin")
 from jspice import *
 
 #############################################################
@@ -39,7 +40,7 @@ signal.signal(signal.SIGINT,sigHandler)
 #############################################################
 #READ CONFIGURATION FILE
 #############################################################
-CONF=loadConf(PATH+"/../")
+loadConf(DIR+"/jspice.cfg")
 
 #############################################################
 #ARGUMENTS
