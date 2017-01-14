@@ -167,9 +167,7 @@ def run():
             rlogEntry(flog,"Error:\n\t"+str(e))
 
         del(cmd,rlogEntry)
-        print locals()
-        msg="{}".format(locals())
-        msg=msg.replace("\n","")
+        msg=jsonpickle.dumps(locals())
         socket.send(msg)
         del(msg)
 

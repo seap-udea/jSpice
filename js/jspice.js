@@ -108,10 +108,7 @@ var jspice=(function($){
 		     },
 		type:'POST'
 	    }).done(function(d,t,e){
-		jspice.log(d);
-		var djson=clearResponse(d.response);
-		jspice.log(djson);
-		var x=JSON.parse(djson);
+		var x=JSON.parse(d.response);
 		jspice.log(x);
 	    });
 	});

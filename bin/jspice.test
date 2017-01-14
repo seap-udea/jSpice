@@ -66,6 +66,7 @@ for mod in CONF["numerical_modules"]:exec(mod)
 #TEST CODE
 #############################################################
 import sys
+import jsonpickle
 
 """
 print spy.jutcnow()
@@ -73,6 +74,20 @@ print spy.jlocnow()
 print spy.jetnow()
 
 """
-print spy.str2et("01/01/2017 00:00:00")
+def run():
+    et=spy.str2et("01/01/2017 00:00:00")
+    a=np.array([1,2,3])
 
-print json.dumps(locals())
+    try:
+        exec("b=f(1)")
+    except:
+        pass
+
+    def f(x):
+        return x**2
+
+    loc=locals()
+    j=jsonpickle.dumps(loc)
+    print j
+
+run()

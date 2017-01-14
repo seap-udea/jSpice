@@ -25,7 +25,7 @@
 #SENSIBLE MODULES
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import sys,os,inspect,zmq,cgi,glob,signal
-import commands,json,shlex,subprocess,time
+import commands,json,shlex,subprocess,time,jsonpickle
 import sqlite3 as sqlite
 from functools import update_wrapper
 
