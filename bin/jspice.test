@@ -25,22 +25,14 @@ PATH=os.path.realpath(
     os.path.abspath(os.path.split(
         inspect.getfile(
             inspect.currentframe()))[0]))
-sys.path.insert(0,PATH+"/../bin")
+DIR=PATH+"/.."
+sys.path.insert(0,DIR+"/bin")
 from jspice.core import *
-
-#############################################################
-#CANCEL BEHAVIOR
-#############################################################
-def sigHandler(signal,frame):
-    import sys
-    logEntry(flog,"Terminating client")
-    sys.exit(0)
-signal.signal(signal.SIGINT,sigHandler)
 
 #############################################################
 #READ CONFIGURATION FILE
 #############################################################
-CONF=loadConf(PATH+"/../")
+CONF=loadConf(DIR+"/jspice.cfg")
 
 #############################################################
 #LOAD SPICE KERNELS

@@ -45,9 +45,9 @@ exit=sys.exit
 #############################################################
 #UTIL ROUTINES
 #############################################################
-def loadConf(path):
+def loadConf(filecfg):
     conf=dict()
-    execfile(path+"/server.cfg",{},conf)
+    execfile(filecfg,{},conf)
     return conf
 
 def logEntry(flog,entry,instance="root"):
