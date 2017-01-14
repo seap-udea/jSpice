@@ -24,7 +24,9 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #SENSIBLE MODULES
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-import sys,os,inspect,zmq,cgi,glob,signal,commands,json,shlex,subprocess
+import sys,os,inspect,zmq,cgi,glob,signal
+import commands,json,shlex,subprocess
+import sqlite3 as sqlite
 from functools import update_wrapper
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

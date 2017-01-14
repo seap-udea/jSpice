@@ -53,7 +53,7 @@ var jspice=(function($){
 		//Default parameters
 		server:location.host,
 		slave:location.host,
-		kerneltype:"dynamic"
+		sessiontype:"dynamic"
 	    },parameters);
 	jspice.log(["Parameters:",parameters],"init");
 	var keys=Object.keys(parameters);
@@ -65,9 +65,21 @@ var jspice=(function($){
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	var _server_http="http://"+jspice.server+"/jSpice"
 	var _slave_http="http://"+jspice.slave+"/jSpice"
-	var _kernel_cgi=_server_http+"/cgi-bin/jspice.launchkernel.cgi";
+	var _session_cgi=_server_http+"/cgi-bin/jspice.session.cgi";
 	var _client_cgi=_server_http+"/cgi-bin/jspice.client.cgi";
 	
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	//INITIALIZE SESSION
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	var _session_handler=jspice.run({
+	    url:_session_cgi,
+	    data:{sessionid:jspice.sessionid},
+	    type:'POST',
+	});
+	_session_handler.done(function(x,t,e){
+	    jspice.log(x.pid);
+	});
+
 	/*
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//INITIALIZE
@@ -152,6 +164,20 @@ var jspice=(function($){
     //////////////////////////////////////////////////////////////
     //BASIC METHODS
     //////////////////////////////////////////////////////////////
+    jspice.run=function(parameters={}){
+	parameters=$.extend(
+	    {
+		url:location.host,
+		data:{},
+		type:'GET',
+		dataType:'jsonp',
+		headers:{'Access-Control-Allow-Origin': '*'},
+	    },parameters);
+	jspice.log(["AJAX Parameters:",parameters]);
+	var handler=$.ajax(parameters);
+	return handler;
+    };
+
     jspice.initKernel=function(){
 	handler=$.ajax({
 	    url:jspice.kernel,
@@ -194,7 +220,8 @@ var jspice=(function($){
 		message+=t+" ";
 	    }
 	}else{
-	    message=text;
+	    if(typeof(text)=='object') message=JSON.stringify(text,null,4);
+	    else message=text;
 	}
 	var now=new Date();
 	console.log("["+now.toLocaleString()+"] "+

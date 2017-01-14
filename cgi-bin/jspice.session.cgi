@@ -14,7 +14,7 @@
 #							    #
 #                 Jorge I. Zuluaga (C) 2016		    #
 #############################################################
-# Function: jSpice kernel
+# Function: jSpice session
 #############################################################
 
 #############################################################
@@ -63,11 +63,11 @@ sessionid=getArg("sessionid","1",params=params)
 callback=getArg("callback","json",params=params)
 
 #############################################################
-#LAUNCH KERNEL
+#LAUNCH SESSION
 #############################################################
 #os.spawnl(os.P_NOWAIT,"ls -R / &> /tmp/ls")
 #print "Listo"
-cmd="python %s/cgi-bin/jspice.kernel.cgi callback=%s sessionid=%s"%(DIR,callback,sessionid)
+cmd="python %s/bin/jspice.session callback=%s sessionid=%s"%(DIR,callback,sessionid)
 fnull=open(os.devnull,"w")
 popen=subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=fnull,stderr=subprocess.STDOUT)
 print callback+"""({"cmd":"%s","pid":"%s"})"""%(cmd,popen.pid)
