@@ -63,11 +63,69 @@ sessionid=getArg("sessionid","1",params=params)
 callback=getArg("callback","json",params=params)
 
 #############################################################
-#LAUNCH KERNEL
+#LOAD SPICE KERNELS
 #############################################################
-#os.spawnl(os.P_NOWAIT,"ls -R / &> /tmp/ls")
-#print "Listo"
-cmd="python %s/cgi-bin/jspice.kernel.cgi callback=%s sessionid=%s"%(DIR,callback,sessionid)
-fnull=open(os.devnull,"w")
-popen=subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=fnull,stderr=subprocess.STDOUT)
-print callback+"""({"cmd":"%s","pid":"%s"})"""%(cmd,popen.pid)
+for kernel in glob.glob(DIR+"/"+CONF["kernels_dir"]+"/*"):
+    spy.furnsh(kernel)
+
+#############################################################
+#INITIALIZE COMMUNICATIONS
+#############################################################
+qserving=False
+for port in xrange(CONF["port_range"][0],CONF["port_range"][1]):
+    try:
+        context=zmq.Context()
+        #Traditional: socket=context.socket(zmq.REP)
+        socket=context.socket(zmq.REP)
+        #With timeout:
+        socket.bind("tcp://*:%d"%port)
+        logEntry(flog,"Listening in port %d to sessionid %s"%(port,sessionid))
+        os.system("mkdir -p %s/sessions/%s"%(DIR,sessionid))
+        f=open("%s/sessions/%s/port"%(DIR,sessionid),"w")
+        f.write('jsonpCallback({"port":%d})'%port)
+        f.close()
+        qserving=True
+        break
+    except zmq.error.ZMQError:
+        logEntry(flog,"Error with port %d"%port)
+instance="server in port %d"%port
+
+if not qserving:
+    logEntry(flog,"No available ports")
+    print callback+"""({"status":"no port"})"""
+    exit(1)
+else:
+    print callback+"""({"status":"listening on port %d"})"""%port
+
+#############################################################
+#REMOVE AND ADD MODULES
+#############################################################
+#REMOVE SENSIBLE MODULES
+exec("del(%s)"%CONF["sensible_modules"])
+#ADD NEW MODULES
+for mod in CONF["numerical_modules"]:exec(mod)
+
+#############################################################
+#RECEIVE
+#############################################################
+i=0
+logEntry(flog,"Starting server...",instance)
+while True:
+    cmd=socket.recv()
+    if cmd=="jspice=True":
+        rlogEntry=logEntryClean
+    else:
+        rlogEntry=logEntry
+
+    rlogEntry(flog,"Command received: %s"%cmd,instance)
+    if "exit(" in cmd:break
+    try:
+        exec(cmd)
+        rlogEntry(flog,"Command succesfully executed.",instance)
+    except Exception as e:
+        rlogEntry(flog,"Error:\n\t"+str(e))
+    socket.send("{}".format(globals()))
+    i+=1
+
+rlogEntry(flog,"Exiting server",instance)
+print callback+"""{"kill":true}""" 

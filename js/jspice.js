@@ -25,15 +25,12 @@ var jspice=(function($){
     
     var jspice={
 	version: '0.1',
-	sessionid:'',
-	slave:'',
-	server:'',
     };
 
     //////////////////////////////////////////////////////////////
     //JSPICE INITIALIZE
     //////////////////////////////////////////////////////////////
-    jspice.init=function(slave="localhost",server="localhost"){
+    jspice.init=function(parameters={}){
 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//SESSION INFORMATION
@@ -49,21 +46,38 @@ var jspice=(function($){
 	jspice.log("Session ID:"+jspice.sessionid,"init");
 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	//CONSTRUCTOR PARAMETERS
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	parameters=$.extend(
+	    {
+		//Default parameters
+		server:location.host,
+		slave:location.host,
+		kerneltype:"dynamic"
+	    },parameters);
+	jspice.log(["Parameters:",parameters],"init");
+	var keys=Object.keys(parameters);
+	for(var i=0;i<keys.length;i++) this[keys[i]]=parameters[keys[i]];
+	jspice.log(["Basic properties:",this],"init");
+	
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	//JSPICE PRIVATE PROPERTIES
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	var _server_http="http://"+jspice.server+"/jSpice"
+	var _slave_http="http://"+jspice.slave+"/jSpice"
+	var _kernel_cgi=_server_http+"/cgi-bin/jspice.launchkernel.cgi";
+	var _client_cgi=_server_http+"/cgi-bin/jspice.client.cgi";
+	
+	/*
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//INITIALIZE
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	jspice.server=server;
-	jspice.server_http="http://"+jspice.server+"/jSpice"
-
-	jspice.slave=location.host;
-	jspice.slave_http="http://"+jspice.slave+"/jSpice"
 
 	jspice.kernel=jspice.http+"/cgi-bin/jspice.launchkernel.cgi";
 	jspice.client=jspice.http+"/cgi-bin/jspice.client.cgi";
 
 	jspice.log("Server:"+jspice.server,"init");
 	jspice.log("Slave:"+jspice.slave,"init");
-
-	/*
 
 	jspice.indicator=document.createElement('div');
 	$(jspice.indicator).
@@ -172,10 +186,20 @@ var jspice=(function($){
     };
 
     jspice.log=function(text,section="main",instance=jspice.sessionid){
+	var message="";
+	if(text instanceof Array){
+	    for(var i=0;i<text.length;i++){
+		var t=text[i];
+		if(typeof(t)=='object') t=JSON.stringify(t,null,4);
+		message+=t+" ";
+	    }
+	}else{
+	    message=text;
+	}
 	var now=new Date();
 	console.log("["+now.toLocaleString()+"] "+
 		    "["+instance+"] "+
-		    "["+section+"] "+JSON.stringify(text,null,4));
+		    "["+section+"] "+message);
     };
 
     jspice.stopKernel=function(){
