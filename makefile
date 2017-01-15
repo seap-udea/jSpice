@@ -21,6 +21,7 @@ reset:
 	@echo "Resetting sessions database..."
 	@-python bin/jspice.sql
 	@echo "Resetting log files..."
+	@-rm log/*
 
 commit:
 	@echo "Commiting..."
