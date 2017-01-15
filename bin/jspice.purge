@@ -37,14 +37,15 @@ from jspice.core import *
 #############################################################
 #LOG FILE
 #############################################################
-flog=open(DIR+"/log/sessions.log","a")
+flog=open(DIR+"/log/purge.log","a")
+os.system("touch %s/.purging"%DIR)
 
 #############################################################
 #CANCEL BEHAVIOR
 #############################################################
 def sigHandler(signal,frame):
-    import sys
-    logEntry(flog,"Terminating server in port %d"%port)
+    import sys,os
+    os.system("rm %s/.purging"%DIR)
     sys.exit(0)
 for sig in SIGNALS:signal.signal(sig,sigHandler)
 
@@ -57,7 +58,33 @@ loadConf(DIR+"/jspice.cfg")
 #CGI PARAMETERS
 #############################################################
 params=cgi.FieldStorage();
-sessionid=getArg("sessionid","0"*20,params=params)
-callback=getArg("callback","callbackJsonp",params=params)
-port=int(getArg("port",5500,params=params))
-proxy=getArg("proxy","127.0.0.1",params=params)
+
+#############################################################
+#TEST HEALTH
+#############################################################
+timeout=CONF["session_timeout"]*60
+while True:
+    results=sqlExec("select * from sessions",DIR+"/sessions.db")
+    for row in results:
+        # Get session information
+        sessionid,port,timestart,pid,proxy=row
+        logEntry(flog,"Checking session %s..."%sessionid)
+
+        # Get time of last update
+        sessdir="%s/sessions/%s"%(DIR,sessionid)
+        tfile=os.path.getctime(sessdir+"/session.log")
+        
+        # Time now
+        tnow=getTime()
+
+        # Age of session
+        sessage=tnow-tfile
+
+        print sessionid,sessage
+        # If session timeout exit
+        if sessage>timeout:
+            logEntry(flog,"Stopping session %s"%sessionid)
+            #unregisterSession(sessionid,DIR,DIR+"/sessions.db")
+            #os.system("kill %s"%port)
+
+    time.sleep(0.1*timeout)

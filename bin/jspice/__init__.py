@@ -202,3 +202,7 @@ def encodeLocals(local):
 def stringifyDictionary(dictionary):
     d={k:repr(v).replace("'",'') for k,v in dictionary.items()}
     return "{}".format(d)
+
+def getTime():
+    unixt=time.mktime(datetime.datetime.now().timetuple())    
+    return unixt
