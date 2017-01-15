@@ -61,7 +61,7 @@ connect=sqlite.connect("sessions.db")
 with connect:
     db=connect.cursor()
 
-    if action=="create":
+    if action=="reset":
         logEntry(flog,"Creating tables","create")
         print "Creating tables..."
         

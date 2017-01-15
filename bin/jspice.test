@@ -102,4 +102,14 @@ def run():
     print j
     #j=jsonpickle.dumps(loc)
 
+    """
+    cmd="\\n\\net+=dt;\\ndeltet=spy.deltet(et,ET);\\ncal=spy.etcal(et-deltet,100);\\n\\nstate3,ltmp=spy.spkgeo(3,et,ECLIPJ2000,0);\\npos3=state3[:3];\\nvel3=state3[3:];\\n\\nsum=0\\nfor i in xrange(10):\\n\\tsum+=1\\n\\n"
+    """
+
+    dt=1
+    et=2
+    cmd="\n\net+=dt;\ndeltet=spy.deltet(et,'ET');\ncal=spy.etcal(et-deltet,100);\n\nstate3,ltmp=spy.spkgeo(3,et,'ECLIPJ2000',0);\npos3=state3[:3];\nvel3=state3[3:];\n\nsum=0\n"
+    exec(cmd)
+
+
 run()

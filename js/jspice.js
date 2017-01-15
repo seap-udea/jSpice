@@ -19,32 +19,28 @@ Function: jSpice javascript library
 */
 
 //######################################################################
+//JSPICE CONFIGURATION
+//######################################################################
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//GLOBAL VARIABLES
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+HEALTH_TIMEOUT=null;
+
+//######################################################################
 //MODULE PATTERN OF JSPICE
 //######################################################################
 var jspice=(function($){
     
     var jspice={
 	version: '0.1',
+	verbose_depth: 0
     };
 
     //////////////////////////////////////////////////////////////
     //JSPICE INITIALIZE
     //////////////////////////////////////////////////////////////
     jspice.init=function(parameters={}){
-
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	//SESSION INFORMATION
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	jspice.sessionid=readCookie("sessionid");
-	if(!jspice.sessionid){
-	    jspice.sessionid=randomString(20);
-	    createCookie("sessionid",jspice.sessionid,1);
-	    jspice.log("New session","init");
-	}else{
-	    jspice.log("Session recovered","init");
-	}
-	jspice.log("Session ID:"+jspice.sessionid,"init");
-	$('#sessionid').html(jspice.sessionid)
 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//CONSTRUCTOR PARAMETERS
@@ -64,38 +60,66 @@ var jspice=(function($){
 		proxy:"127.0.0.1",
 
 		//Type of session: dynamic, unique
-		sessiontype:"dynamic",
+		session_type:"dynamic",
 
 		//Time between health signals in seconds
-		health_time:60.0,
+		session_timeout:1.0,
+
+		//Verbose depth: 1: shallow, 2: medium, 3: depth
+		verbose_depth:1
 	    },parameters);
 
 	//Create jSpice indicator
-	jspice.log(["Parameters:",parameters],"init");
+	jspice.log(["Parameters:",parameters],0,"init");
 	var keys=Object.keys(parameters);
 	for(var i=0;i<keys.length;i++) this[keys[i]]=parameters[keys[i]];
-	jspice.log(["Basic properties:",this],"init");
+	jspice.log(["Basic properties:",this],2,"init");
+
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	//SESSION INFORMATION
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	var namecookie="sessionid_"+pageName();
+	jspice.sessionid=readCookie(namecookie);
+	if(!jspice.sessionid){
+	    jspice.sessionid=randomString(20);
+	    createCookie(namecookie,jspice.sessionid,1);
+	    jspice.log("New session",1,"init");
+	}else{
+	    jspice.log("Session recovered",1,"init");
+	}
+	jspice.log("Session ID:"+jspice.sessionid,1,"init");
+	$('#sessionid').html(jspice.sessionid)
+
 	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//JSPICE PRIVATE PROPERTIES
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	var _server_http="http://"+jspice.server_fqdn+"/jSpice"
-	var _proxy_http="http://"+jspice.proxy_fqdn+"/jSpice"
-	jspice.session_cgi=_server_http+"/cgi-bin/jspice.session.cgi";
-	jspice.proxy_cgi=_proxy_http+"/cgi-bin/jspice.proxy.cgi";
+	jspice.server_http="http://"+jspice.server_fqdn+"/jSpice"
+	jspice.proxy_http="http://"+jspice.proxy_fqdn+"/jSpice"
+	jspice.session_cgi=jspice.server_http+"/cgi-bin/jspice.session.cgi";
+	jspice.proxy_cgi=jspice.proxy_http+"/cgi-bin/jspice.proxy.cgi";
+	jspice.direct_cgi=jspice.proxy_http+"/cgi-bin/jspice.direct.cgi";
 	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//START SESSION
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	_session_handler=jspice.startKernel();
-	jspice.log(["Properties after initialization:",this],"init");
-	return _session_handler;
+	//Get server configuration
+	jspice.run({url:jspice.server_http+"/jspice.cfg",
+		    type:'GET',
+		    jsonpCallback:'jsonpCallback'})
+	    .done(function(d){
+		jspice.session_timeout=d.session_timeout;
+	    });
+	var session_handler=jspice.startSession();
+	jspice.log(["Properties after initialization:",this],2,"init");
+	return session_handler;
     };
 
     //////////////////////////////////////////////////////////////
     //BASIC METHODS
     //////////////////////////////////////////////////////////////
-    jspice.log=function(text,section="main",instance=jspice.sessionid){
+    jspice.log=function(text,depth=1,section="main"){
+	if(depth>jspice.verbose_depth) return 0;
 	var message="";
 	if(text instanceof Array){
 	    for(var i=0;i<text.length;i++){
@@ -109,12 +133,11 @@ var jspice=(function($){
 	}
 	var now=new Date();
 	console.log("["+now.toLocaleString()+"] "+
-		    "["+instance+"] "+
 		    "["+section+"] "+message);
     };
 
     jspice.run=function(parameters={}){
-	parameters=$.extend(
+	var parameters=$.extend(
 	    {
 		url:jspice.proxy_cgi,
 		data:{},
@@ -123,6 +146,49 @@ var jspice=(function($){
 		headers:{'Access-Control-Allow-Origin': '*'},
 	    },parameters);
 	var handler=$.ajax(parameters);
+	return handler;
+    };
+
+    jspice.command=function(code="jspice=True"){
+	code=stringCompact(code);
+	jspice.log("Executing:"+code,3,"command");
+	var parameters={
+	    url:jspice.proxy_cgi,
+	    data:{sessionid:jspice.sessionid,
+		  server:jspice.server,
+		  port:jspice.port,
+		  code:code
+		 },
+	    type:"POST",
+	    success:function(result){
+		jspice.output=jspice.decodeMsg(result.response);
+		jspice.log(["Command output:",jspice.output],3,"command");
+	    },
+	    error:function(){
+		jspice.healthCheck(false);
+	    }
+	};
+	handler=jspice.run(parameters);
+	return handler;
+    };
+
+    jspice.command_direct=function(code="jspice=True"){
+	code=stringCompact(code);
+	jspice.log("Executing:"+code,3,"command");
+	var parameters={
+	    url:jspice.direct_cgi,
+	    data:{sessionid:jspice.sessionid,
+		  server:jspice.server,
+		  port:jspice.port,
+		  code:code
+		 },
+	    type:"POST",
+	    success:function(result){
+		jspice.output=jspice.decodeMsg(result.response);
+		jspice.log(["Command output:",jspice.output],3,"command");
+	    },
+	};
+	handler=jspice.run(parameters);
 	return handler;
     };
 
@@ -137,19 +203,24 @@ var jspice=(function($){
 	    type:"POST"
 	})
 		   .done(function(d,t,e){
-		       jspice.log("Session healthy");
+		       jspice.log("Session healthy",1,"health");
 		       $(jspice.indicator).css('background','darkgreen');
 		   })
 		   .fail(function(d,t,e){
-		       jspice.log("Session passed away");
+		       jspice.log("Session passed away",1,"health");
 		       $(jspice.indicator).css('background','red');
+		       if(HEALTH_TIMEOUT) clearTimeout(HEALTH_TIMEOUT);
 		   });
-	if(qrepeat)
-	    setTimeout(jspice.healthCheck,1000*jspice.health_time);
+	if(qrepeat){
+	    var timeout=1000*jspice.session_timeout*60/4;
+	    jspice.log("Timeout:"+timeout,2,"health");
+	    HEALTH_TIMEOUT=setTimeout(jspice.healthCheck,timeout);
+	}
     };
 
-    jspice.startKernel=function(){
-	var _session_handler=jspice.run({
+    jspice.startSession=function(){
+	jspice.log("Starting session.",1,"start");
+	var handler=jspice.run({
 	    url:jspice.session_cgi,
 	    data:{sessionid:jspice.sessionid,
 		  proxy:jspice.proxy,
@@ -159,6 +230,7 @@ var jspice=(function($){
 		jspice.port=d.port;
 	    }
 	}).done(function(x,t,e){
+	    jspice.log("Session started",1,"start");
 	    //Place indicator
 	    jspice.indicator=document.createElement('div');
 	    $(jspice.indicator).
@@ -168,10 +240,10 @@ var jspice=(function($){
 	    //Launch health checker
 	    jspice.healthCheck();
 	});
-	return _session_handler;
+	return handler;
     };
 
-    jspice.stopKernel=function(){
+    jspice.stopSession=function(){
 	var parameters={
 	    url:jspice.proxy_cgi,
 	    data:{sessionid:jspice.sessionid,
@@ -183,6 +255,7 @@ var jspice=(function($){
 	};
 	jspice.run(parameters)
 	    .fail(function(){
+		if(HEALTH_TIMEOUT) clearTimeout(HEALTH_TIMEOUT);
 		jspice.healthCheck(false);
 	    });
     };
@@ -194,9 +267,12 @@ var jspice=(function($){
  	msg=msg.replace(/"/g,'\\"');
 	msg=msg.replace(/'/g,'"');
 	msg=msg.replace(/\n/g,'');
-	console.log(msg);
 	jmsg=JSON.parse(msg);
 	return jmsg;
+    };
+
+    jspice.getValue=function(data){
+	obj=data.response;
     };
 
     return jspice;
@@ -213,6 +289,11 @@ var jspice=(function($){
   Source:
   https://www.daniweb.com/programming/web-development/threads/19283/how-to-save-session-values-in-javascript
 */
+function pageName(){
+    var pname=location.pathname.substring(location.pathname.lastIndexOf("/") + 1);
+    return pname;
+}
+
 function createCookie(name,value,days) {
     if (days) {
         var date = new Date();
@@ -249,7 +330,17 @@ function randomString(num) {
     return random;
 }
 
+function stringCompact(msg){
+    var msgcomp=msg;
+    //msgcomp=msgcomp.replace(/\n/gm,"\\n")
+    //msgcomp=msgcomp.replace(/\t/gm,"\\t")
+    //msgcomp=msgcomp.replace(/\s+(?=([^"^']*"[^"^']*["'])*[^"^']*$)/gm,"")
+    return msgcomp;
+}
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //PYTHON SANDBOXING
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function array(vector){return vector;}
+var True=true
+var False=false

@@ -1,0 +1,45 @@
+Comments on kernels
+===================
+
+Planetary Ephemeris
+===================
+
+DE421
+-----
+
+Source URL: http://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/
+
+Comments (taken from
+http://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421.cmt):
+
+"This SPK file was released on February 13, 2008 by the Solar System
+Dynamics Group of JPL's Guidance, Navigation, and Control section.
+
+The DE 421 planetary ephemeris is described in JPL IOM 343R-08-002,
+dated Feb. 13, 2008. The introduction of that memo states, in part,
+that this ephemeris "represents an overall update for all planets, and
+so is suitable for use for any purpose limited by the integration time
+span of approximately 1900-2050."  The memo also states that this
+ephemeris "is the successor to the best previously released ephemeris
+DE 418."
+
+   BEGIN_TIME      = CAL-ET 1899 JUL 29 00:00:00.000
+   END_TIME        = CAL-ET 2053 OCT 09 00:00:00.000
+
+Bodies                                                 Start of Interval (ET)          End of Interval (ET)
+-------                                                -----------------------------   -----------------------------
+1 MERCURY BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER  		   Same coverage as previous object
+2 VENUS BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER                Same coverage as previous object
+3 EARTH BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER                Same coverage as previous object
+4 MARS BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER                 Same coverage as previous object
+5 JUPITER BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER              Same coverage as previous object
+6 SATURN BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER               Same coverage as previous object
+7 URANUS BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER               Same coverage as previous object
+8 NEPTUNE BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER              Same coverage as previous object
+9 PLUTO BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER                Same coverage as previous object
+10 SUN w.r.t. 0 SOLAR SYSTEM BARYCENTER                            Same coverage as previous object
+199 MERCURY w.r.t. 1 MERCURY BARYCENTER                            Same coverage as previous object
+299 VENUS w.r.t. 2 VENUS BARYCENTER                                Same coverage as previous object
+301 MOON w.r.t. 3 EARTH BARYCENTER                                 Same coverage as previous object
+399 EARTH w.r.t. 3 EARTH BARYCENTER                                Same coverage as previous object
+499 MARS w.r.t. 4 MARS BARYCENTER                                  Same coverage as previous object

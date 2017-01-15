@@ -53,7 +53,7 @@ SIGNALS=[signal.SIGABRT,signal.SIGFPE,signal.SIGILL,
 #############################################################
 #UTIL ROUTINES
 #############################################################
-def callbackJsonp(parameters):
+def jsonpCallback(parameters):
     global CONF
     CONF.update(parameters)
 
@@ -150,13 +150,6 @@ class dict2obj(object):
         for attr in other.__dict__.keys():
             exec("self.%s=other.%s"%(attr,attr))
         return self
-
-def jsonCallback(jsonp):
-    json_str="{}".format(jsonp)
-    json_str=json_str.replace("'",'"')
-    port_obj=json.loads(json_str)
-    port=port_obj['port']
-    return port
 
 def sqlExec(sql,dbfile):
     global CON,DB

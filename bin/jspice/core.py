@@ -61,3 +61,8 @@ spy.jlocnow=_locnow
 def _etnow():
     return spy.str2et(spy.jlocnow())
 spy.jetnow=_etnow
+
+def _et2str(et):
+    deltet=spy.deltet(et,"ET")
+    cal=spy.etcal(et-deltet,100)
+    return cal

@@ -48,6 +48,7 @@ os.system("mkdir -p %s/sessions/%s"%(DIR,sessionid))
 #############################################################
 def sigHandler(signal,frame):
     import sys
+    unregisterSession(sessionid,DIR,DIR+"/sessions.db")
     logEntry(flog,"Terminating session in port %d"%port,sessionid)
     sys.exit(0)
 for sig in SIGNALS:signal.signal(sig,sigHandler)
@@ -111,7 +112,7 @@ if not qserv:
     logEntry(flog,"No ports available",sessionid)
 
 f=open(DIR+"/sessions/%s/port"%sessionid,"w")
-f.write("""callbackJsonp({"port":%d})\n"""%port)
+f.write("""jsonpCallback({"port":%d})\n"""%port)
 f.close()
 
 #############################################################
@@ -168,14 +169,12 @@ def run():
         if "exit(" in cmd:break
         try:
             exec(cmd)
-            print cmd
             rlogEntry(flog,"Command succesfully executed.",sessionid)
         except Exception as e:
             rlogEntry(flog,"Error:\n\t"+str(e))
 
         del(cmd,rlogEntry)
         msg=stringifyDictionary(locals())
-        print msg
         socket.send(msg)
         del(msg)
 

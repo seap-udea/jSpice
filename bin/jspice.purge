@@ -43,7 +43,7 @@ purgefile="%s/.purging"%DIR
 if os.path.isfile(purgefile):
     print "Purging is ongoing"
     exit(1)
-os.system("touch %s"%purgefile)
+os.system("echo %s > %s"%(os.getpid(),purgefile))
 
 #############################################################
 #CANCEL BEHAVIOR
@@ -84,15 +84,16 @@ while True:
 
         # Age of session
         sessage=tnow-tfile
+        sessage_min=sessage/60.0
+        logEntry(flog,"Session %s has been running by %.2f minutes..."%(sessionid,sessage_min))
 
-        print sessionid,sessage
         # If session timeout exit
         if sessage>timeout:
             logEntry(flog,"Stopping session %s"%sessionid)
             os.system("kill %s"%pid)
 
         if not os.path.isfile(purgefile):
-            print "Purging stopped"
+            logEntry(flog,"Purging stopped")
             exit(1)
 
     time.sleep(0.5*timeout)

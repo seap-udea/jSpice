@@ -17,14 +17,22 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 Function: jSpice css
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 */
+html,body{
+    font-family:helvetica;
+}
+.jsp-black{
+    background-color:black;
+    color:white;
+}    
+
 .jsp{
     font-family:courier;
 }
 .jsp-indicator{
-    position:absolute;
+    position:fixed;
     top:0px;
     right:0px;
-    border:solid black 1px;
+    border:solid black 0px;
     padding:10px;
     font-size:0.8em;
     color:white;

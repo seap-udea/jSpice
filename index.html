@@ -5,43 +5,8 @@
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/jspice.js"></script>
   <script>
-
-    $(document).ready(function(){
-	var parameters={
-	    server_fqdn:"urania.udea.edu.co",
-	    proxy_fqdn:"urania.udea.edu.co",
-	    kerneltype:"unique"
-	}
-	
-	jspice.init(parameters).done(function(d,t,e){
-	    jspice.log(["Initialization:",d]);
-	}).done(function(){
-	    var code="et=spy.str2et('01/01/2016 00:00:00')";
-	    execCode(code);
-	});
-    });
-
-    function execCode(code){
-
-	var parameters={
-	    url:jspice.proxy_cgi,
-	    data:{sessionid:jspice.sessionid,
-		  server:jspice.server,
-		  port:jspice.port,
-		  code:code
-		 },
-	    type:"POST"
-	};
-	
-	handler=jspice.run(parameters);
-	handler.done(function(d,t,e){
-	    $('#results').html(d.response);
-	    $('#history').html($('#history').html()+"\n"+code);
-	    $('#input').val('');
-	    jspice.healthCheck(false);
-	});
-
-    }
+    var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
+				    proxy_fqdn:"urania.udea.edu.co"});
   </script>
 </head>
 
@@ -56,23 +21,38 @@
     </h1>
     <h2 id="sessionid"></h2>
 
-    <button onclick="jspice.startKernel()">Start kernel</button>
-    <button onclick="jspice.stopKernel()">Stop kernel</button>
+    <button onclick="jspice.startSession()">Start session</button>
+    <button onclick="jspice.stopSession()">Stop session</button>
   </center>
 
   <p>
-    Command:<input id="input" type="text" name="command" value="" onchange="execCode($(this).val())" size=100>
+    Command:<input id="input" type="text" name="command" value="" onchange="execCode($(this).val())" size=30 style="padding:5px">
   </p>
 
   <p>
     History:
-    <pre id="history" style="border:solid black 1px;padding:20px"></pre>
+    <div id="history" style="border:solid black 0px;padding:20px;background:lightgray"></div>
+    <br/>
     Results:
-    <div id="results" style="border:solid black 1px;padding:20px"></div>
+    <div id="results" style="border:solid black 0px;padding:20px;background:lightblue"></div>
   </p>
   <script>
     $(document).ready(function(){
+	jspice_handler.done(function(){
+	    var code="et=spy.str2et('01/01/2016 00:00:00')";
+	    execCode(code);
+	});
     });
+
+    function execCode(code){
+	jspice.command(code)
+	    .done(function(d,t,e){
+		$('#results').html(d.response);
+		$('#history').html($('#history').html()+code+"<br/>");
+		$('#input').val('');
+		jspice.healthCheck(false);
+	    });
+    }
   </script>
 </body>
 

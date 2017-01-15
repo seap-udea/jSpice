@@ -15,13 +15,16 @@ perms:
 
 reset:
 	@echo "Resetting server & proxy..."
+	@echo "Scanning ports and killing remaining sessions..."
 	@-python bin/jspice.scan kill
 	@echo "Removing sessions temporal file..."
-	@-rm -r sessions/*
+	@-rm -r sessions/* &> /dev/null
 	@echo "Resetting sessions database..."
-	@-python bin/jspice.sql
+	@-python bin/jspice.sql action=reset
 	@echo "Resetting log files..."
-	@-rm log/*
+	@-rm log/* &> /dev/null
+	@echo "Stopping purging process..."
+	@kill $(shell cat .purging)
 
 commit:
 	@echo "Commiting..."
