@@ -49,7 +49,6 @@ os.system("mkdir -p %s/sessions/%s"%(DIR,sessionid))
 def sigHandler(signal,frame):
     import sys
     logEntry(flog,"Terminating session in port %d"%port,sessionid)
-    unregisterSession(sessionid,DIR,DIR+"/sessions.db")
     sys.exit(0)
 for sig in SIGNALS:signal.signal(sig,sigHandler)
 
@@ -135,6 +134,14 @@ registerSession(session,DIR+"/sessions.db")
 exec("del(%s)"%CONF["sensible_modules"])
 #ADD NEW MODULES
 for mod in CONF["numerical_modules"]:exec(mod)
+
+#############################################################
+#PURGE SESSION
+#############################################################
+ferror=open(DIR+"/log/errors.log","a")
+cmd="%s %s/bin/jspice.purge"%(CONF["python"],DIR)
+logEntry(flog,"Purging cmd:"+cmd,sessionid)
+popen=subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=ferror,stderr=subprocess.STDOUT)
 
 #############################################################
 #LOAD SPICE KERNELS

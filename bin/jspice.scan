@@ -56,13 +56,17 @@ i=0
 j=0
 for port in xrange(CONF["port_range"][0],CONF["port_range"][1]):
     if (i%20)==0:print "Scanning port %d"%port
-    out=commands.getoutput("python cgi-bin/jspice.client.cgi port=%d code='a=1' timeout=0.1 callback='json'"%port)
+    out=commands.getoutput("python cgi-bin/jspice.proxy.cgi port=%d code='jspice=True'"%port)
     if not 'Terminated' in out:
         j+=1
-        print "\tServer listening in port %d"%port
+        try:
+            sessionid=sqlExec("select sessionid from sessions where port='%d'"%port,DIR+"/sessions.db")[0][0]
+        except:
+            sessionid="(no session)"
+        print "\tServer listening in port %d to session %s"%(port,sessionid)
         if qkill:
             print "\t\tTerminating server in port %d"%port
-            commands.getoutput("python cgi-bin/jspice.client.cgi port=%d code='exit(0)' timeout=0.1 callback='json'"%port)
+            commands.getoutput("python cgi-bin/jspice.proxy.cgi port=%d code='exit(0)'"%port)
     i+=1
 
 if j>0:print "%d ports are active"%j

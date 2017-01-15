@@ -10,7 +10,17 @@ cleancode:
 clean:cleancrap cleancode
 
 perms:
-	chown -R www-data.www-data .
+	@echo "Setting permissions..."
+	@chown -R www-data.www-data .
+
+reset:
+	@echo "Resetting server & proxy..."
+	@-python bin/jspice.scan kill
+	@echo "Removing sessions temporal file..."
+	@-rm -r sessions/*
+	@echo "Resetting sessions database..."
+	@-python bin/jspice.sql
+	@echo "Resetting log files..."
 
 commit:
 	@echo "Commiting..."

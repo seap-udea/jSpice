@@ -38,7 +38,12 @@ from jspice.core import *
 #LOG FILE
 #############################################################
 flog=open(DIR+"/log/purge.log","a")
-os.system("touch %s/.purging"%DIR)
+
+purgefile="%s/.purging"%DIR
+if os.path.isfile(purgefile):
+    print "Purging is ongoing"
+    exit(1)
+os.system("touch %s"%purgefile)
 
 #############################################################
 #CANCEL BEHAVIOR
@@ -84,7 +89,10 @@ while True:
         # If session timeout exit
         if sessage>timeout:
             logEntry(flog,"Stopping session %s"%sessionid)
-            #unregisterSession(sessionid,DIR,DIR+"/sessions.db")
-            #os.system("kill %s"%port)
+            os.system("kill %s"%pid)
 
-    time.sleep(0.1*timeout)
+        if not os.path.isfile(purgefile):
+            print "Purging stopped"
+            exit(1)
+
+    time.sleep(0.5*timeout)

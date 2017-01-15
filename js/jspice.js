@@ -87,26 +87,7 @@ var jspice=(function($){
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//START SESSION
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	var _session_handler=jspice.run({
-	    url:jspice.session_cgi,
-	    data:{sessionid:jspice.sessionid,
-		  proxy:jspice.proxy,
-		  port:5501},
-	    type:'POST',
-	    success:function(d){
-		jspice.port=d.port;
-	    }
-	}).done(function(x,t,e){
-	    //Place indicator
-	    jspice.indicator=document.createElement('div');
-	    $(jspice.indicator).
-		addClass('jsp jsp-indicator').
-		html('Powered by jSpice').
-		appendTo($("body"));
-	    //Launch health checker
-	    jspice.healthCheck();
-	});
-
+	_session_handler=jspice.startKernel();
 	jspice.log(["Properties after initialization:",this],"init");
 	return _session_handler;
     };
@@ -135,9 +116,9 @@ var jspice=(function($){
     jspice.run=function(parameters={}){
 	parameters=$.extend(
 	    {
-		url:location.host,
+		url:jspice.proxy_cgi,
 		data:{},
-		type:'GET',
+		type:'POST',
 		dataType:'jsonp',
 		headers:{'Access-Control-Allow-Origin': '*'},
 	    },parameters);
@@ -145,7 +126,7 @@ var jspice=(function($){
 	return handler;
     };
 
-    jspice.healthCheck=function(){
+    jspice.healthCheck=function(qrepeat=true){
 	jspice.run({
 	    url:jspice.proxy_cgi,
 	    data:{sessionid:jspice.sessionid,
@@ -163,9 +144,49 @@ var jspice=(function($){
 		       jspice.log("Session passed away");
 		       $(jspice.indicator).css('background','red');
 		   });
-	setTimeout(jspice.healthCheck,1000*jspice.health_time);
-    }
+	if(qrepeat)
+	    setTimeout(jspice.healthCheck,1000*jspice.health_time);
+    };
 
+    jspice.startKernel=function(){
+	var _session_handler=jspice.run({
+	    url:jspice.session_cgi,
+	    data:{sessionid:jspice.sessionid,
+		  proxy:jspice.proxy,
+		  port:5501},
+	    type:'POST',
+	    success:function(d){
+		jspice.port=d.port;
+	    }
+	}).done(function(x,t,e){
+	    //Place indicator
+	    jspice.indicator=document.createElement('div');
+	    $(jspice.indicator).
+		addClass('jsp jsp-indicator').
+		html('Powered by jSpice').
+		appendTo($("body"));
+	    //Launch health checker
+	    jspice.healthCheck();
+	});
+	return _session_handler;
+    };
+
+    jspice.stopKernel=function(){
+	var parameters={
+	    url:jspice.proxy_cgi,
+	    data:{sessionid:jspice.sessionid,
+		  server:jspice.server,
+		  port:jspice.port,
+		  code:"exit(0)"
+		 },
+	    type:"POST"
+	};
+	jspice.run(parameters)
+	    .fail(function(){
+		jspice.healthCheck(false);
+	    });
+    };
+    
     //////////////////////////////////////////////////////////////
     //UTIL
     //////////////////////////////////////////////////////////////
@@ -176,7 +197,7 @@ var jspice=(function($){
 	console.log(msg);
 	jmsg=JSON.parse(msg);
 	return jmsg;
-    }
+    };
 
     return jspice;
 }($));

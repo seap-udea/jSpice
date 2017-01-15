@@ -4,8 +4,8 @@
   <link rel="stylesheet" href="css/jspice.css" type="text/css">
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/jspice.js"></script>
-  <script src="js/jsonpickle.min.js"></script>
   <script>
+
     $(document).ready(function(){
 	var parameters={
 	    server_fqdn:"urania.udea.edu.co",
@@ -15,17 +15,32 @@
 	
 	jspice.init(parameters).done(function(d,t,e){
 	    jspice.log(["Initialization:",d]);
+	}).done(function(){
+	    var code="et=spy.str2et('01/01/2016 00:00:00')";
+	    execCode(code);
 	});
     });
+
     function execCode(code){
-	handler=jspice.execCommand(code);
-	handler.done(function(x,t,e){
-	    jspice.log(x);
-	    $('#results').html(JSON.stringify(x));
+
+	var parameters={
+	    url:jspice.proxy_cgi,
+	    data:{sessionid:jspice.sessionid,
+		  server:jspice.server,
+		  port:jspice.port,
+		  code:code
+		 },
+	    type:"POST"
+	};
+	
+	handler=jspice.run(parameters);
+	handler.done(function(d,t,e){
+	    $('#results').html(d.response);
 	    $('#history').html($('#history').html()+"\n"+code);
-	    $('#input').val('')
+	    $('#input').val('');
+	    jspice.healthCheck(false);
 	});
-	jspice.log(code,"index");
+
     }
   </script>
 </head>
@@ -40,17 +55,20 @@
       jSpice Test
     </h1>
     <h2 id="sessionid"></h2>
+
     <button onclick="jspice.startKernel()">Start kernel</button>
     <button onclick="jspice.stopKernel()">Stop kernel</button>
   </center>
+
   <p>
-    Command:<input id="input" type="text" name="command" value="et=spy.str2et('01/01/2016 00:00:00')" onchange="execCode($(this).val())" size=100>
+    Command:<input id="input" type="text" name="command" value="" onchange="execCode($(this).val())" size=100>
   </p>
+
   <p>
     History:
-    <pre id="history" style="border:solid black 1px;"></pre>
+    <pre id="history" style="border:solid black 1px;padding:20px"></pre>
     Results:
-    <div id="results" style="border:solid black 1px;"></div>
+    <div id="results" style="border:solid black 1px;padding:20px"></div>
   </p>
   <script>
     $(document).ready(function(){

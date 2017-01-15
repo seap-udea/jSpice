@@ -65,6 +65,7 @@ server=getArg("server","127.0.0.1",params=params)
 sessionid=getArg("sessionid","0"*20,params=params)
 
 sessdir="%s/sessions/%s/"%(DIR,sessionid)
+if not os.path.isdir(sessdir):sessdir=DIR+"/log"
 flog=open(sessdir+"/proxy.log","a")
 logEntry(flog,"Proxy invoked calling to port %d of server %s with timeout %.1f"%(port,server,timeout),sessionid)
 logEntry(flog,"Proxy commands:\n\tCallback:%s\n\tCode:\n\t%s"%(callback,code),sessionid)
