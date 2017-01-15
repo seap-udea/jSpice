@@ -52,12 +52,25 @@ var jspice=(function($){
 	parameters=$.extend(
 	    {
 		//Default parameters
+
+		//Fully qualified name of the jSpice server
 		server_fqdn:"localhost",
+		//IP of the jSpice server
 		server:"127.0.0.1",
-		slave_fqdn:"localhost",
-		slave:"127.0.0.1",
-		sessiontype:"dynamic"
+
+		//Fully qualified name of the jSpice proxy
+		proxy_fqdn:"localhost",
+		//IP of the jSpice proxy
+		proxy:"127.0.0.1",
+
+		//Type of session: dynamic, unique
+		sessiontype:"dynamic",
+
+		//Time between health signals in seconds
+		health_time:60.0,
 	    },parameters);
+
+	//Create jSpice indicator
 	jspice.log(["Parameters:",parameters],"init");
 	var keys=Object.keys(parameters);
 	for(var i=0;i<keys.length;i++) this[keys[i]]=parameters[keys[i]];
@@ -67,9 +80,9 @@ var jspice=(function($){
 	//JSPICE PRIVATE PROPERTIES
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	var _server_http="http://"+jspice.server_fqdn+"/jSpice"
-	var _slave_http="http://"+jspice.slave_fqdn+"/jSpice"
+	var _proxy_http="http://"+jspice.proxy_fqdn+"/jSpice"
 	jspice.session_cgi=_server_http+"/cgi-bin/jspice.session.cgi";
-	jspice.executor_cgi=_slave_http+"/cgi-bin/jspice.executor.cgi";
+	jspice.proxy_cgi=_proxy_http+"/cgi-bin/jspice.proxy.cgi";
 	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	//START SESSION
@@ -77,135 +90,30 @@ var jspice=(function($){
 	var _session_handler=jspice.run({
 	    url:jspice.session_cgi,
 	    data:{sessionid:jspice.sessionid,
-		  slave:jspice.slave,
+		  proxy:jspice.proxy,
 		  port:5501},
 	    type:'POST',
 	    success:function(d){
 		jspice.port=d.port;
 	    }
-	});
-
-	//Initialize
-	_session_handler.done(function(x,t,e){
-
+	}).done(function(x,t,e){
 	    //Place indicator
 	    jspice.indicator=document.createElement('div');
 	    $(jspice.indicator).
 		addClass('jsp jsp-indicator').
 		html('Powered by jSpice').
 		appendTo($("body"));
-
-	    //jspice.healthCheck();
-	    
 	    //Launch health checker
-	    jspice.run({
-		url:jspice.executor_cgi,
-		data:{sessionid:jspice.sessionid,
-		      server:jspice.server,
-		      port:jspice.port,
-		      //code:"f=lambda x:np.exp(x)",
-		      code:"y=f(4)"
-		     },
-		type:'POST'
-	    }).done(function(d,t,e){
-		var x=JSON.parse(d.response);
-		jspice.log(x);
-	    });
+	    jspice.healthCheck();
 	});
+
+	jspice.log(["Properties after initialization:",this],"init");
 	return _session_handler;
-
-	/*
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	//INITIALIZE
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-	jspice.kernel=jspice.http+"/cgi-bin/jspice.launchkernel.cgi";
-	jspice.client=jspice.http+"/cgi-bin/jspice.client.cgi";
-
-	jspice.log("Server:"+jspice.server,"init");
-	jspice.log("Slave:"+jspice.slave,"init");
-
-	jspice.initKernel();
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	//INITIAL CHECKS
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	//????????????????????????????????????????
-	//Is there a port for jspice session?
-	//????????????????????????????????????????
-	jspice.portfile=jspice.http+'/sessions/'+jspice.sessionid+'/port'
-	var filehandler=$.ajax({
-	    url:jspice.portfile,
-	    data:{},
-	    type:"GET",
-	    timeout:1000,
-	    dataType:'jsonp',
-	    headers:{'Access-Control-Allow-Origin': '*'},
-	    jsonpCallback:'jsonpCallback'
-	});
-	//No, there is no port...
-	filehandler.fail(function(x,t,e){
-	    jspice.log("Port file not found. Executing new kernel.","filehandler fail");
-	    //Then, start a new kernel...
-	    jspice.kernelhandler=jspice.initKernel();
-	    jspice.log(jspice,"init");
-	});
-	//Yes, there is a port...
-	filehandler.done(function(d,t,e){
-	    jspice.log("A port is available for jspice session.","filehandler done");
-
-	    //Then, get the port
-	    jspice.port=d.port;
-	    jspice.log("Port for session: "+jspice.port,"filehandler done");
-
-	    //????????????????????????????????????????
-	    //Is the kernel still listening jspice port?
-	    //????????????????????????????????????????
-	    clienthandler=jspice.execCommand("jspice=True");
-
-	    //Yes, the kernel is listening
-	    clienthandler.done(function(d,t,e){
-		jspice.log("Kernel is still listening in jspice port...","clienthandler done");
-		jspice.log(jspice,"clienthandler done");
-		jspice.isKernelAlive()
-	    });
-
-	    //No, the kernel is not listening anymore
-	    clienthandler.fail(function(d,t,e){
-		jspice.log("Kernel is not listening anymore...","clienthandler fail");
-		
-		//Then, start a new kernel...
-		jspice.kernelhandler=jspice.initKernel();
-		
-		jspice.log(jspice.kernerlhandler,"clienthandler fail");
-		
-		jspice.kernerlhandler.fail(function(x,t,e){
-		    jspice.log("Failed","kernelhandler fail");
-		});
-
-		jspice.log(jspice,"clienthandler fail");
-		$(jspice.indicator).css('background','darkgreen');
-	    });
-	});
-	*/
     };
 
     //////////////////////////////////////////////////////////////
     //BASIC METHODS
     //////////////////////////////////////////////////////////////
-    jspice.run=function(parameters={}){
-	parameters=$.extend(
-	    {
-		url:location.host,
-		data:{},
-		type:'GET',
-		dataType:'jsonp',
-		headers:{'Access-Control-Allow-Origin': '*'},
-	    },parameters);
-	//jspice.log(["AJAX Parameters:",parameters]);
-	var handler=$.ajax(parameters);
-	return handler;
-    };
-
     jspice.log=function(text,section="main",instance=jspice.sessionid){
 	var message="";
 	if(text instanceof Array){
@@ -224,9 +132,22 @@ var jspice=(function($){
 		    "["+section+"] "+message);
     };
 
+    jspice.run=function(parameters={}){
+	parameters=$.extend(
+	    {
+		url:location.host,
+		data:{},
+		type:'GET',
+		dataType:'jsonp',
+		headers:{'Access-Control-Allow-Origin': '*'},
+	    },parameters);
+	var handler=$.ajax(parameters);
+	return handler;
+    };
+
     jspice.healthCheck=function(){
 	jspice.run({
-	    url:jspice.executor_cgi,
+	    url:jspice.proxy_cgi,
 	    data:{sessionid:jspice.sessionid,
 		  server:jspice.server,
 		  port:jspice.port,
@@ -236,33 +157,25 @@ var jspice=(function($){
 	})
 		   .done(function(d,t,e){
 		       jspice.log("Session healthy");
-		       $(jspice.indicator).css('background','blue');
+		       $(jspice.indicator).css('background','darkgreen');
 		   })
 		   .fail(function(d,t,e){
 		       jspice.log("Session passed away");
 		       $(jspice.indicator).css('background','red');
 		   });
-	//setTimeout(jspice.healthCheck,1000);
+	setTimeout(jspice.healthCheck,1000*jspice.health_time);
     }
 
     //////////////////////////////////////////////////////////////
     //UTIL
     //////////////////////////////////////////////////////////////
-    function clearResponse(response){
-	response=response.replace(/'/g,'"');
-	response=response.replace(/<\w+>/g,'');
-	response=response.replace(/<[^<]+>/g,'""');
-	response=response.replace(/None/g,'""');
-	response=response.replace(/True/g,'true');
-	response=response.replace(/False/g,'false');
-	response=response.replace(/\n/g,' ');
-	return response;
-    }
-
-    function updateKernel(response){
-	response=clearResponse(response);
-	jspice.log(response,"update");
-	jspice.kernel=JSON.parse(response);
+    jspice.decodeMsg=function(msg){
+ 	msg=msg.replace(/"/g,'\\"');
+	msg=msg.replace(/'/g,'"');
+	msg=msg.replace(/\n/g,'');
+	console.log(msg);
+	jmsg=JSON.parse(msg);
+	return jmsg;
     }
 
     return jspice;
@@ -271,6 +184,10 @@ var jspice=(function($){
 //######################################################################
 //ADDITIONAL ROUTINES
 //######################################################################
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//COOKIES ROUTINES
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 /*
   Source:
   https://www.daniweb.com/programming/web-development/threads/19283/how-to-save-session-values-in-javascript
@@ -300,6 +217,9 @@ function eraseCookie(name) {
     createCookie(name,"",-1);
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//OTHER ROUTINES
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function randomString(num) {
     var s = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     var random=Array(num).join().split(',').map(function(){ 
@@ -307,3 +227,8 @@ function randomString(num) {
     }).join('');
     return random;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//PYTHON SANDBOXING
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function array(vector){return vector;}

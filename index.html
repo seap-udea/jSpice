@@ -1,21 +1,22 @@
 <!DOCTYPE html>
 <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <link rel="stylesheet" href="css/jspice.css" type="text/css">
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/jspice.js"></script>
-  <script src="js/jsonpickleJS/build/jsonpickle.min.js"></script>
+  <script src="js/jsonpickle.min.js"></script>
   <script>
     $(document).ready(function(){
-	jspice.init({
+	var parameters={
 	    server_fqdn:"urania.udea.edu.co",
-	    slave_fqdn:"urania.udea.edu.co",
+	    proxy_fqdn:"urania.udea.edu.co",
 	    kerneltype:"unique"
-	})
-	    .done(function(d,t,e){
-		jspice.log(["Initialization:",d]);
-	    })
+	}
+	
+	jspice.init(parameters).done(function(d,t,e){
+	    jspice.log(["Initialization:",d]);
+	});
     });
-
     function execCode(code){
 	handler=jspice.execCommand(code);
 	handler.done(function(x,t,e){

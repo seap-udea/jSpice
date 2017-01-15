@@ -60,7 +60,7 @@ params=cgi.FieldStorage();
 sessionid=getArg("sessionid","0"*20,params=params)
 callback=getArg("callback","callbackJsonp",params=params)
 port=int(getArg("port",5500,params=params))
-slave=getArg("slave","127.0.0.1",params=params)
+proxy=getArg("proxy","127.0.0.1",params=params)
 
 #############################################################
 #CHECK IF SESSION IS REGISTERED
@@ -75,7 +75,7 @@ if len(results)>0:
 #############################################################
 #LAUNCH SESSION
 #############################################################
-cmd="%s %s/bin/jspice.session sessionid=%s port=%d slave=%s"%(CONF["python"],DIR,sessionid,port,slave)
+cmd="%s %s/bin/jspice.session sessionid=%s port=%d proxy=%s"%(CONF["python"],DIR,sessionid,port,proxy)
 logEntry(flog,"Executing cmd:"+cmd)
 
 ferror=open(DIR+"/log/errors.log","a")

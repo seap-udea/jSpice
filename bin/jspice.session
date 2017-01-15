@@ -40,7 +40,7 @@ from jspice.core import *
 params=cgi.FieldStorage();
 sessionid=getArg("sessionid","0"*20,params=params)
 port=int(getArg("port",5500,params=params))
-slave=getArg("slave","127.0.0.1",params=params)
+proxy=getArg("proxy","127.0.0.1",params=params)
 os.system("mkdir -p %s/sessions/%s"%(DIR,sessionid))
 
 #############################################################
@@ -72,9 +72,9 @@ try:
     context=zmq.Context()
     context=zmq.Context()
     socket=context.socket(zmq.REP)
-    socket.bind("tcp://%s:%d"%(slave,port))
+    socket.bind("tcp://%s:%d"%(proxy,port))
     qserv=True
-    logEntry(flog,"Starting session for slave %s for session %s listening in port %d"%(slave,
+    logEntry(flog,"Starting session for proxy %s for session %s listening in port %d"%(proxy,
                                                                                        sessionid,
                                                                                        port),
              sessionid)
@@ -96,9 +96,9 @@ except:
             context=zmq.Context()
             context=zmq.Context()
             socket=context.socket(zmq.REP)
-            socket.bind("tcp://%s:%d"%(slave,port))
+            socket.bind("tcp://%s:%d"%(proxy,port))
             if port in sports:continue
-            logEntry(flog,"Starting session in slave %s for session %s listening in port %d"%(slave,
+            logEntry(flog,"Starting session in proxy %s for session %s listening in port %d"%(proxy,
                                                                                               sessionid,
                                                                                               port),
                      sessionid)
@@ -122,7 +122,7 @@ timestart=int(time.mktime(datetime.datetime.now().timetuple()))
 pid=os.getpid()
 session=dict(sessionid=sessionid,
              port=port,
-             slave=slave,
+             proxy=proxy,
              timestart=timestart,
              pid=pid)
 logEntry(flog,"Registering session %s in port %d at time %d with pid %s"%(sessionid,port,timestart,pid),sessionid)
@@ -167,7 +167,8 @@ def run():
             rlogEntry(flog,"Error:\n\t"+str(e))
 
         del(cmd,rlogEntry)
-        msg=jsonpickle.dumps(locals())
+        msg=stringifyDictionary(locals())
+        print msg
         socket.send(msg)
         del(msg)
 

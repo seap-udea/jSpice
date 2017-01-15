@@ -52,6 +52,7 @@ loadConf(DIR+"/jspice.cfg")
 #PARAMETERS
 #############################################################
 action=getArg("action")
+checkArgs()
 
 #############################################################
 #CONNECT
@@ -72,7 +73,7 @@ with connect:
         port varchar(6),
         timestart varchar(50),
         pid varchar(6),
-        slave varchar(50),
+        proxy varchar(50),
         primary key (sessionid)
         );
         """)
@@ -83,7 +84,7 @@ with connect:
         create table statistics(
         sessionid varchar(20),
         port varchar(6),
-        slave varchar(50),
+        proxy varchar(50),
         timelife varchar(50),
         ncommands varchar(10),
         memory varchar(10)

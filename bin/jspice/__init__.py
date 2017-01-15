@@ -179,16 +179,26 @@ def registerSession(session,dbfile):
     sqlExec("insert or replace into sessions (%s) values (%s)"%(fields,values),dbfile)
 
 def unregisterSession(sessionid,sessdir,dbfile):
-    out=sqlExec("select timestart,pid,port,slave from sessions where sessionid='%s'"%sessionid,dbfile)
+    out=sqlExec("select timestart,pid,port,proxy from sessions where sessionid='%s'"%sessionid,dbfile)
     timestart=int(out[0][0])
     pid=out[0][1]
     port=out[0][2]
-    slave=out[0][3]
+    proxy=out[0][3]
     timeend=int(time.mktime(datetime.datetime.now().timetuple()))
     timelife=timeend-timestart
     vmsize=commands.getoutput("cat /proc/%s/status |grep VmRSS"%pid)
     ncom=commands.getoutput("grep 'Command received' %s/sessions/%s/session.log |wc -l"%(sessdir,sessionid))
     mem=vmsize.split()[1]
-    sqlExec("insert into statistics (sessionid,port,timelife,ncommands,memory,slave) values ('%s','%s','%s','%s','%s','%s')"%(str(sessionid),str(port),str(timelife),str(ncom),str(mem),str(slave)),dbfile)
+    sqlExec("insert into statistics (sessionid,port,timelife,ncommands,memory,proxy) values ('%s','%s','%s','%s','%s','%s')"%(str(sessionid),str(port),str(timelife),str(ncom),str(mem),str(proxy)),dbfile)
     sqlExec("delete from sessions where sessionid='%s'"%sessionid,dbfile)
     
+def encodeLocals(local):
+    r=dict()
+    for key in local.keys():
+        r[key]=str(local[key]).replace("'",'\\"')
+    final="{}".format(r)
+    return final
+
+def stringifyDictionary(dictionary):
+    d={k:repr(v).replace("'",'') for k,v in dictionary.items()}
+    return "{}".format(d)
