@@ -1,34 +1,106 @@
 Comments on kernels
 ===================
 
+Earth orientation data
+======================
+
+EARTH ITRF93 Association Kernel
+-------------------------------
+
+   This is a kernel used to designate ITRF93 as the default body-fixed
+   frame associated with the Earth. The file name is
+
+      earth_assoc_itrf93.tf
+
+   This association kernel is a text file. See the comments in
+   the file for details concerning usage.
+
+GM/mass kernels
+---------------
+  
+   The file 
+
+      gm_de431.tpc
+
+   gives "GM" (gravitational constant times mass) values for the
+   sun, planets, planetary system barycenters, and selected satellites 
+   asteroids. These values are based on DE-431 and latest satellite 
+   ephemeris release memos. This file was provided to NAIF on 04/16/14
+   by Jon D. Giorgini, Solar System Dynamics group.
+
+EARTH_FIXED Alias Kernel
+------------------------
+
+   This is a kernel used to map the reference frame alias 
+   EARTH_FIXED to a specific reference frame:
+
+      earth_fixed.tf
+
+   Using the alias EARTH_FIXED in code allows applications to 
+   select the earth-fixed frame to use at run time via the 
+   frame specification in this kernel.  The default association
+   is with the frame 
+
+      IAU_EARTH
+
+   The file contains instructions for changing the association to
+   ITRF93.
+
 Planetary Ephemeris
 ===================
 
-DE421
------
+DE430 & 431
+-----------
 
 Source URL: http://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/
 
 Comments (taken from
-http://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421.cmt):
+http://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/aareadme_de430-de431.txt):
 
-"This SPK file was released on February 13, 2008 by the Solar System
-Dynamics Group of JPL's Guidance, Navigation, and Control section.
+"
+JPL's Solar System Dynamics Group has released two new planet ephemeris files: DE430 and DE431.
+Each contains ephemeris data for the planet barycenters--Mercury through Pluto 
+(NAIF ID codes 1 through 9), plus the Sun (10), the earth mass center (399) and the moon (301).
+Also present are the Mercury and Venus mass centers--199 and 299 respectively--since these have
+the same locations as the respective barycenters.
 
-The DE 421 planetary ephemeris is described in JPL IOM 343R-08-002,
-dated Feb. 13, 2008. The introduction of that memo states, in part,
-that this ephemeris "represents an overall update for all planets, and
-so is suitable for use for any purpose limited by the integration time
-span of approximately 1900-2050."  The memo also states that this
-ephemeris "is the successor to the best previously released ephemeris
-DE 418."
+The difference between DE430 and DE431 is mainly in the dynamical model for the Earth's Moon.
+DE430 uses a more complete dynamical model which produces a slightly more accurate ephemeris for 
+the Moon. However the dynamical model used for DE430 includes a model of an excited lunar 
+core/mantle rotation interaction which does not extrapolate into the distant past well. 
+Therefore DE430 was integrated over a limited time span. DE431 does not include the excited 
+core/mantle state so is less accurate for times near the current epoch but is more accurate for 
+the distant past.
 
-   BEGIN_TIME      = CAL-ET 1899 JUL 29 00:00:00.000
-   END_TIME        = CAL-ET 2053 OCT 09 00:00:00.000
+The difference in the positions of the planets agree to better than 0.001 km over the time 
+period covered by DE430, a difference which is not statistically distinguished by the currently 
+available data. The difference in the lunar position is less than 0.01 km over the period 
+1950 to 2050.
+
+As of the date of this posting DE430 is now considered the official lunar/planetary ephemeris, 
+suitable for all users/uses.
+
+For those whose need of a planet ephemeris can be satisfied by the DE430 time span, and for 
+those in need of the most accurate JPL-produced lunar ephemeris, DE430 is now considered 
+the official export ephemeris.
+
+  de430.bsp
+  Approximate file size:   120 Mbytes
+  Approximate time span:   1550 Jan 01 to 2650 Jan 22
+
+
+For those in need of a very long planetary ephemeris, and where the degradation in the lunar 
+state is not significant, DE431 provides longer coverage.
+
+  de431.bsp
+  Approximate file size:  3.2 Gbytes
+  Approximate time span:  13201 B.C. to 17191 A.D.
+
+"
 
 Bodies                                                 Start of Interval (ET)          End of Interval (ET)
 -------                                                -----------------------------   -----------------------------
-1 MERCURY BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER  		   Same coverage as previous object
+1 MERCURY BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER              Same coverage as previous object
 2 VENUS BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER                Same coverage as previous object
 3 EARTH BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER                Same coverage as previous object
 4 MARS BARYCENTER w.r.t. 0 SOLAR SYSTEM BARYCENTER                 Same coverage as previous object
@@ -42,4 +114,477 @@ Bodies                                                 Start of Interval (ET)   
 299 VENUS w.r.t. 2 VENUS BARYCENTER                                Same coverage as previous object
 301 MOON w.r.t. 3 EARTH BARYCENTER                                 Same coverage as previous object
 399 EARTH w.r.t. 3 EARTH BARYCENTER                                Same coverage as previous object
-499 MARS w.r.t. 4 MARS BARYCENTER                                  Same coverage as previous object
+
+Satellite ephemeris
+====================
+
+Jupiter:
+
+Bodies: EARTH BARYCENTER (3) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        JUPITER BARYCENTER (5) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        SUN (10) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        EARTH (399) w.r.t. EARTH BARYCENTER (3)
+        HIMALIA (506) w.r.t. JUPITER BARYCENTER (5)
+        ELARA (507) w.r.t. JUPITER BARYCENTER (5)
+        PASIPHAE (508) w.r.t. JUPITER BARYCENTER (5)
+        SINOPE (509) w.r.t. JUPITER BARYCENTER (5)
+        LYSITHEA (510) w.r.t. JUPITER BARYCENTER (5)
+        CARME (511) w.r.t. JUPITER BARYCENTER (5)
+        ANANKE (512) w.r.t. JUPITER BARYCENTER (5)
+        LEDA (513) w.r.t. JUPITER BARYCENTER (5)
+        CALLIRRHOE (517) w.r.t. JUPITER BARYCENTER (5)
+        THEMISTO (518) w.r.t. JUPITER BARYCENTER (5)
+        MAGACLITE (519) w.r.t. JUPITER BARYCENTER (5)
+        TAYGETE (520) w.r.t. JUPITER BARYCENTER (5)
+        CHALDENE (521) w.r.t. JUPITER BARYCENTER (5)
+        HARPALYKE (522) w.r.t. JUPITER BARYCENTER (5)
+        KALYKE (523) w.r.t. JUPITER BARYCENTER (5)
+        IOCASTE (524) w.r.t. JUPITER BARYCENTER (5)
+        ERINOME (525) w.r.t. JUPITER BARYCENTER (5)
+        ISONOE (526) w.r.t. JUPITER BARYCENTER (5)
+        PRAXIDIKE (527) w.r.t. JUPITER BARYCENTER (5)
+        AUTONOE (528) w.r.t. JUPITER BARYCENTER (5)
+        THYONE (529) w.r.t. JUPITER BARYCENTER (5)
+        HERMIPPE (530) w.r.t. JUPITER BARYCENTER (5)
+        AITNE (531) w.r.t. JUPITER BARYCENTER (5)
+        EURYDOME (532) w.r.t. JUPITER BARYCENTER (5)
+        EUANTHE (533) w.r.t. JUPITER BARYCENTER (5)
+        EUPORIE (534) w.r.t. JUPITER BARYCENTER (5)
+        ORTHOSIE (535) w.r.t. JUPITER BARYCENTER (5)
+        SPONDE (536) w.r.t. JUPITER BARYCENTER (5)
+        KALE (537) w.r.t. JUPITER BARYCENTER (5)
+        PASITHEE (538) w.r.t. JUPITER BARYCENTER (5)
+        HEGEMONE (539) w.r.t. JUPITER BARYCENTER (5)
+        MNEME (540) w.r.t. JUPITER BARYCENTER (5)
+        AOEDE (541) w.r.t. JUPITER BARYCENTER (5)
+        THELXINOE (542) w.r.t. JUPITER BARYCENTER (5)
+        ARCHE (543) w.r.t. JUPITER BARYCENTER (5)
+        KALLICHORE (544) w.r.t. JUPITER BARYCENTER (5)
+        HELIKE (545) w.r.t. JUPITER BARYCENTER (5)
+        CARPO (546) w.r.t. JUPITER BARYCENTER (5)
+        EUKELADE (547) w.r.t. JUPITER BARYCENTER (5)
+        CYLLENE (548) w.r.t. JUPITER BARYCENTER (5)
+        KORE (549) w.r.t. JUPITER BARYCENTER (5)
+        HERSE (550) w.r.t. JUPITER BARYCENTER (5)
+        JUPITER (599) w.r.t. JUPITER BARYCENTER (5)
+        55060 w.r.t. JUPITER BARYCENTER (5)
+        55061 w.r.t. JUPITER BARYCENTER (5)
+        55062 w.r.t. JUPITER BARYCENTER (5)
+        55063 w.r.t. JUPITER BARYCENTER (5)
+        55064 w.r.t. JUPITER BARYCENTER (5)
+        55065 w.r.t. JUPITER BARYCENTER (5)
+        55066 w.r.t. JUPITER BARYCENTER (5)
+        55067 w.r.t. JUPITER BARYCENTER (5)
+        55068 w.r.t. JUPITER BARYCENTER (5)
+        55069 w.r.t. JUPITER BARYCENTER (5)
+        55070 w.r.t. JUPITER BARYCENTER (5)
+        55071 w.r.t. JUPITER BARYCENTER (5)
+        55072 w.r.t. JUPITER BARYCENTER (5)
+        55073 w.r.t. JUPITER BARYCENTER (5)
+        55074 w.r.t. JUPITER BARYCENTER (5)
+        55075 w.r.t. JUPITER BARYCENTER (5)
+        55076 w.r.t. JUPITER BARYCENTER (5)
+        Start of Interval (ET)              End of Interval (ET)
+        -----------------------------       -----------------------------
+        1900 JAN 12 00:00:41.184            2100 JAN 01 00:01:07.183
+
+Saturn:
+
+sat368:
+
+Bodies: EARTH BARYCENTER (3) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        SATURN BARYCENTER (6) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        SUN (10) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        EARTH (399) w.r.t. EARTH BARYCENTER (3)
+        YMIR (619) w.r.t. SATURN BARYCENTER (6)
+        PAALIAQ (620) w.r.t. SATURN BARYCENTER (6)
+        TARVOS (621) w.r.t. SATURN BARYCENTER (6)
+        IJIRAQ (622) w.r.t. SATURN BARYCENTER (6)
+        SUTTUNGR (623) w.r.t. SATURN BARYCENTER (6)
+        KIVIUQ (624) w.r.t. SATURN BARYCENTER (6)
+        MUNDILFARI (625) w.r.t. SATURN BARYCENTER (6)
+        ALBIORIX (626) w.r.t. SATURN BARYCENTER (6)
+        SKATHI (627) w.r.t. SATURN BARYCENTER (6)
+        ERRIAPUS (628) w.r.t. SATURN BARYCENTER (6)
+        SIARNAQ (629) w.r.t. SATURN BARYCENTER (6)
+        THRYMR (630) w.r.t. SATURN BARYCENTER (6)
+        NARVI (631) w.r.t. SATURN BARYCENTER (6)
+        AEGIR (636) w.r.t. SATURN BARYCENTER (6)
+        BEBHIONN (637) w.r.t. SATURN BARYCENTER (6)
+        BERGELMIR (638) w.r.t. SATURN BARYCENTER (6)
+        BESTLA (639) w.r.t. SATURN BARYCENTER (6)
+        FARBAUTI (640) w.r.t. SATURN BARYCENTER (6)
+        FENRIR (641) w.r.t. SATURN BARYCENTER (6)
+        FORNJOT (642) w.r.t. SATURN BARYCENTER (6)
+        HATI (643) w.r.t. SATURN BARYCENTER (6)
+        HYRROKKIN (644) w.r.t. SATURN BARYCENTER (6)
+        KARI (645) w.r.t. SATURN BARYCENTER (6)
+        LOGE (646) w.r.t. SATURN BARYCENTER (6)
+        SKOLL (647) w.r.t. SATURN BARYCENTER (6)
+        SURTUR (648) w.r.t. SATURN BARYCENTER (6)
+        JARNSAXA (650) w.r.t. SATURN BARYCENTER (6)
+        GREIP (651) w.r.t. SATURN BARYCENTER (6)
+        TARQEQ (652) w.r.t. SATURN BARYCENTER (6)
+        SATURN (699) w.r.t. SATURN BARYCENTER (6)
+        65035 w.r.t. SATURN BARYCENTER (6)
+        65040 w.r.t. SATURN BARYCENTER (6)
+        65041 w.r.t. SATURN BARYCENTER (6)
+        65045 w.r.t. SATURN BARYCENTER (6)
+        65048 w.r.t. SATURN BARYCENTER (6)
+        65050 w.r.t. SATURN BARYCENTER (6)
+        65055 w.r.t. SATURN BARYCENTER (6)
+        65056 w.r.t. SATURN BARYCENTER (6)
+        Start of Interval (ET)              End of Interval (ET)
+        -----------------------------       -----------------------------
+        1900 JAN 01 00:00:41.183            2100 JAN 01 00:01:07.183
+ 
+sat375
+
+Bodies: EARTH BARYCENTER (3) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        SATURN BARYCENTER (6) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        SUN (10) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        EARTH (399) w.r.t. EARTH BARYCENTER (3)
+        MIMAS (601) w.r.t. SATURN BARYCENTER (6)
+        ENCELADUS (602) w.r.t. SATURN BARYCENTER (6)
+        TETHYS (603) w.r.t. SATURN BARYCENTER (6)
+        DIONE (604) w.r.t. SATURN BARYCENTER (6)
+        RHEA (605) w.r.t. SATURN BARYCENTER (6)
+        TITAN (606) w.r.t. SATURN BARYCENTER (6)
+        HYPERION (607) w.r.t. SATURN BARYCENTER (6)
+        IAPETUS (608) w.r.t. SATURN BARYCENTER (6)
+        PHOEBE (609) w.r.t. SATURN BARYCENTER (6)
+        SATURN (699) w.r.t. SATURN BARYCENTER (6)
+        Start of Interval (ET)              End of Interval (ET)
+        -----------------------------       -----------------------------
+        1900 JAN 01 00:00:41.183            2100 JAN 01 00:01:07.183
+
+sat393
+
+Bodies: EARTH BARYCENTER (3) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        SATURN BARYCENTER (6) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        SUN (10) w.r.t. SOLAR SYSTEM BARYCENTER (0)
+        EARTH (399) w.r.t. EARTH BARYCENTER (3)
+        JANUS (610) w.r.t. SATURN BARYCENTER (6)
+        EPIMETHEUS (611) w.r.t. SATURN BARYCENTER (6)
+        HELENE (612) w.r.t. SATURN BARYCENTER (6)
+        TELESTO (613) w.r.t. SATURN BARYCENTER (6)
+        CALYPSO (614) w.r.t. SATURN BARYCENTER (6)
+        ATLAS (615) w.r.t. SATURN BARYCENTER (6)
+        PROMETHEUS (616) w.r.t. SATURN BARYCENTER (6)
+        PANDORA (617) w.r.t. SATURN BARYCENTER (6)
+        METHONE (632) w.r.t. SATURN BARYCENTER (6)
+        PALLENE (633) w.r.t. SATURN BARYCENTER (6)
+        POLYDEUCES (634) w.r.t. SATURN BARYCENTER (6)
+        ANTHE (649) w.r.t. SATURN BARYCENTER (6)
+        AEGAEON (653) w.r.t. SATURN BARYCENTER (6)
+        SATURN (699) w.r.t. SATURN BARYCENTER (6)
+        Start of Interval (ET)              End of Interval (ET)
+        -----------------------------       -----------------------------
+        1950 JAN 01 00:00:41.183            2050 JAN 01 00:01:08.183
+
+Asteroids
+=========
+
+Bodies                            Start of Interval (ET)          End of Interval (ET)
+-------                           -----------------------------   -----------------------------
+2000001 CERES* w.r.t. 10 SUN      1799 DEC 30 12:00:00.000        2199 DEC 13 12:00:00.000
+2000002* w.r.t. 10 SUN                        Same coverage as previous object
+2000003* w.r.t. 10 SUN                        Same coverage as previous object
+2000004 VESTA* w.r.t. 10 SUN                  Same coverage as previous object
+2000005* w.r.t. 10 SUN                        Same coverage as previous object
+2000006* w.r.t. 10 SUN                        Same coverage as previous object
+2000007* w.r.t. 10 SUN                        Same coverage as previous object
+2000008* w.r.t. 10 SUN                        Same coverage as previous object
+2000009* w.r.t. 10 SUN                        Same coverage as previous object
+2000010* w.r.t. 10 SUN                        Same coverage as previous object
+2000011* w.r.t. 10 SUN                        Same coverage as previous object
+2000012* w.r.t. 10 SUN                        Same coverage as previous object
+2000013* w.r.t. 10 SUN                        Same coverage as previous object
+2000014* w.r.t. 10 SUN                        Same coverage as previous object
+2000015* w.r.t. 10 SUN                        Same coverage as previous object
+2000016* w.r.t. 10 SUN                        Same coverage as previous object
+2000017* w.r.t. 10 SUN                        Same coverage as previous object
+2000018* w.r.t. 10 SUN                        Same coverage as previous object
+2000019* w.r.t. 10 SUN                        Same coverage as previous object
+2000020* w.r.t. 10 SUN                        Same coverage as previous object
+2000021 LUTETIA* w.r.t. 10 SUN                Same coverage as previous object
+2000022* w.r.t. 10 SUN                        Same coverage as previous object
+2000023* w.r.t. 10 SUN                        Same coverage as previous object
+2000024* w.r.t. 10 SUN                        Same coverage as previous object
+2000025* w.r.t. 10 SUN                        Same coverage as previous object
+2000026* w.r.t. 10 SUN                        Same coverage as previous object
+2000027* w.r.t. 10 SUN                        Same coverage as previous object
+2000028* w.r.t. 10 SUN                        Same coverage as previous object
+2000029* w.r.t. 10 SUN                        Same coverage as previous object
+2000030* w.r.t. 10 SUN                        Same coverage as previous object
+2000031* w.r.t. 10 SUN                        Same coverage as previous object
+2000032* w.r.t. 10 SUN                        Same coverage as previous object
+2000034* w.r.t. 10 SUN                        Same coverage as previous object
+2000035* w.r.t. 10 SUN                        Same coverage as previous object
+2000036* w.r.t. 10 SUN                        Same coverage as previous object
+2000037* w.r.t. 10 SUN                        Same coverage as previous object
+2000038* w.r.t. 10 SUN                        Same coverage as previous object
+2000039* w.r.t. 10 SUN                        Same coverage as previous object
+2000040* w.r.t. 10 SUN                        Same coverage as previous object
+2000041* w.r.t. 10 SUN                        Same coverage as previous object
+2000042* w.r.t. 10 SUN                        Same coverage as previous object
+2000043* w.r.t. 10 SUN                        Same coverage as previous object
+2000044* w.r.t. 10 SUN                        Same coverage as previous object
+2000045* w.r.t. 10 SUN                        Same coverage as previous object
+2000046* w.r.t. 10 SUN                        Same coverage as previous object
+2000047* w.r.t. 10 SUN                        Same coverage as previous object
+2000048* w.r.t. 10 SUN                        Same coverage as previous object
+2000049* w.r.t. 10 SUN                        Same coverage as previous object
+2000050* w.r.t. 10 SUN                        Same coverage as previous object
+2000051* w.r.t. 10 SUN                        Same coverage as previous object
+2000052* w.r.t. 10 SUN                        Same coverage as previous object
+2000053* w.r.t. 10 SUN                        Same coverage as previous object
+2000054* w.r.t. 10 SUN                        Same coverage as previous object
+2000056* w.r.t. 10 SUN                        Same coverage as previous object
+2000057* w.r.t. 10 SUN                        Same coverage as previous object
+2000058* w.r.t. 10 SUN                        Same coverage as previous object
+2000059* w.r.t. 10 SUN                        Same coverage as previous object
+2000062* w.r.t. 10 SUN                        Same coverage as previous object
+2000063* w.r.t. 10 SUN                        Same coverage as previous object
+2000065* w.r.t. 10 SUN                        Same coverage as previous object
+2000068* w.r.t. 10 SUN                        Same coverage as previous object
+2000069* w.r.t. 10 SUN                        Same coverage as previous object
+2000070* w.r.t. 10 SUN                        Same coverage as previous object
+2000071* w.r.t. 10 SUN                        Same coverage as previous object
+2000072* w.r.t. 10 SUN                        Same coverage as previous object
+2000074* w.r.t. 10 SUN                        Same coverage as previous object
+2000075* w.r.t. 10 SUN                        Same coverage as previous object
+2000076* w.r.t. 10 SUN                        Same coverage as previous object
+2000077* w.r.t. 10 SUN                        Same coverage as previous object
+2000078* w.r.t. 10 SUN                        Same coverage as previous object
+2000080* w.r.t. 10 SUN                        Same coverage as previous object
+2000081* w.r.t. 10 SUN                        Same coverage as previous object
+2000083* w.r.t. 10 SUN                        Same coverage as previous object
+2000084* w.r.t. 10 SUN                        Same coverage as previous object
+2000085* w.r.t. 10 SUN                        Same coverage as previous object
+2000086* w.r.t. 10 SUN                        Same coverage as previous object
+2000087* w.r.t. 10 SUN                        Same coverage as previous object
+2000088* w.r.t. 10 SUN                        Same coverage as previous object
+2000089* w.r.t. 10 SUN                        Same coverage as previous object
+2000090* w.r.t. 10 SUN                        Same coverage as previous object
+2000091* w.r.t. 10 SUN                        Same coverage as previous object
+2000092* w.r.t. 10 SUN                        Same coverage as previous object
+2000093* w.r.t. 10 SUN                        Same coverage as previous object
+2000094* w.r.t. 10 SUN                        Same coverage as previous object
+2000095* w.r.t. 10 SUN                        Same coverage as previous object
+2000096* w.r.t. 10 SUN                        Same coverage as previous object
+2000097* w.r.t. 10 SUN                        Same coverage as previous object
+2000098* w.r.t. 10 SUN                        Same coverage as previous object
+2000099* w.r.t. 10 SUN                        Same coverage as previous object
+2000102* w.r.t. 10 SUN                        Same coverage as previous object
+2000103* w.r.t. 10 SUN                        Same coverage as previous object
+2000104* w.r.t. 10 SUN                        Same coverage as previous object
+2000105* w.r.t. 10 SUN                        Same coverage as previous object
+2000106* w.r.t. 10 SUN                        Same coverage as previous object
+2000107* w.r.t. 10 SUN                        Same coverage as previous object
+2000109* w.r.t. 10 SUN                        Same coverage as previous object
+2000110* w.r.t. 10 SUN                        Same coverage as previous object
+2000111* w.r.t. 10 SUN                        Same coverage as previous object
+2000112* w.r.t. 10 SUN                        Same coverage as previous object
+2000114* w.r.t. 10 SUN                        Same coverage as previous object
+2000115* w.r.t. 10 SUN                        Same coverage as previous object
+2000117* w.r.t. 10 SUN                        Same coverage as previous object
+2000120* w.r.t. 10 SUN                        Same coverage as previous object
+2000121* w.r.t. 10 SUN                        Same coverage as previous object
+2000124* w.r.t. 10 SUN                        Same coverage as previous object
+2000127* w.r.t. 10 SUN                        Same coverage as previous object
+2000128* w.r.t. 10 SUN                        Same coverage as previous object
+2000129* w.r.t. 10 SUN                        Same coverage as previous object
+2000130* w.r.t. 10 SUN                        Same coverage as previous object
+2000134* w.r.t. 10 SUN                        Same coverage as previous object
+2000135* w.r.t. 10 SUN                        Same coverage as previous object
+2000137* w.r.t. 10 SUN                        Same coverage as previous object
+2000139* w.r.t. 10 SUN                        Same coverage as previous object
+2000140* w.r.t. 10 SUN                        Same coverage as previous object
+2000141* w.r.t. 10 SUN                        Same coverage as previous object
+2000143* w.r.t. 10 SUN                        Same coverage as previous object
+2000144* w.r.t. 10 SUN                        Same coverage as previous object
+2000145* w.r.t. 10 SUN                        Same coverage as previous object
+2000146* w.r.t. 10 SUN                        Same coverage as previous object
+2000147* w.r.t. 10 SUN                        Same coverage as previous object
+2000148* w.r.t. 10 SUN                        Same coverage as previous object
+2000150* w.r.t. 10 SUN                        Same coverage as previous object
+2000154* w.r.t. 10 SUN                        Same coverage as previous object
+2000156* w.r.t. 10 SUN                        Same coverage as previous object
+2000159* w.r.t. 10 SUN                        Same coverage as previous object
+2000160* w.r.t. 10 SUN                        Same coverage as previous object
+2000162* w.r.t. 10 SUN                        Same coverage as previous object
+2000163* w.r.t. 10 SUN                        Same coverage as previous object
+2000164* w.r.t. 10 SUN                        Same coverage as previous object
+2000165* w.r.t. 10 SUN                        Same coverage as previous object
+2000168* w.r.t. 10 SUN                        Same coverage as previous object
+2000171* w.r.t. 10 SUN                        Same coverage as previous object
+2000173* w.r.t. 10 SUN                        Same coverage as previous object
+2000175* w.r.t. 10 SUN                        Same coverage as previous object
+2000176* w.r.t. 10 SUN                        Same coverage as previous object
+2000181* w.r.t. 10 SUN                        Same coverage as previous object
+2000185* w.r.t. 10 SUN                        Same coverage as previous object
+2000187* w.r.t. 10 SUN                        Same coverage as previous object
+2000191* w.r.t. 10 SUN                        Same coverage as previous object
+2000192* w.r.t. 10 SUN                        Same coverage as previous object
+2000194* w.r.t. 10 SUN                        Same coverage as previous object
+2000195* w.r.t. 10 SUN                        Same coverage as previous object
+2000196* w.r.t. 10 SUN                        Same coverage as previous object
+2000200* w.r.t. 10 SUN                        Same coverage as previous object
+2000201* w.r.t. 10 SUN                        Same coverage as previous object
+2000203* w.r.t. 10 SUN                        Same coverage as previous object
+2000205* w.r.t. 10 SUN                        Same coverage as previous object
+2000206* w.r.t. 10 SUN                        Same coverage as previous object
+2000209* w.r.t. 10 SUN                        Same coverage as previous object
+2000210* w.r.t. 10 SUN                        Same coverage as previous object
+2000211* w.r.t. 10 SUN                        Same coverage as previous object
+2000212* w.r.t. 10 SUN                        Same coverage as previous object
+2000213* w.r.t. 10 SUN                        Same coverage as previous object
+2000216 KLEOPATRA* w.r.t. 10 SUN              Same coverage as previous object
+2000221* w.r.t. 10 SUN                        Same coverage as previous object
+2000224* w.r.t. 10 SUN                        Same coverage as previous object
+2000225* w.r.t. 10 SUN                        Same coverage as previous object
+2000230* w.r.t. 10 SUN                        Same coverage as previous object
+2000233* w.r.t. 10 SUN                        Same coverage as previous object
+2000236* w.r.t. 10 SUN                        Same coverage as previous object
+2000238* w.r.t. 10 SUN                        Same coverage as previous object
+2000240* w.r.t. 10 SUN                        Same coverage as previous object
+2000241* w.r.t. 10 SUN                        Same coverage as previous object
+2000247* w.r.t. 10 SUN                        Same coverage as previous object
+2000250* w.r.t. 10 SUN                        Same coverage as previous object
+2000259* w.r.t. 10 SUN                        Same coverage as previous object
+2000266* w.r.t. 10 SUN                        Same coverage as previous object
+2000268* w.r.t. 10 SUN                        Same coverage as previous object
+2000275* w.r.t. 10 SUN                        Same coverage as previous object
+2000276* w.r.t. 10 SUN                        Same coverage as previous object
+2000283* w.r.t. 10 SUN                        Same coverage as previous object
+2000287* w.r.t. 10 SUN                        Same coverage as previous object
+2000303* w.r.t. 10 SUN                        Same coverage as previous object
+2000304* w.r.t. 10 SUN                        Same coverage as previous object
+2000308* w.r.t. 10 SUN                        Same coverage as previous object
+2000313* w.r.t. 10 SUN                        Same coverage as previous object
+2000322* w.r.t. 10 SUN                        Same coverage as previous object
+2000324* w.r.t. 10 SUN                        Same coverage as previous object
+2000326* w.r.t. 10 SUN                        Same coverage as previous object
+2000328* w.r.t. 10 SUN                        Same coverage as previous object
+2000329* w.r.t. 10 SUN                        Same coverage as previous object
+2000334* w.r.t. 10 SUN                        Same coverage as previous object
+2000335* w.r.t. 10 SUN                        Same coverage as previous object
+2000336* w.r.t. 10 SUN                        Same coverage as previous object
+2000337* w.r.t. 10 SUN                        Same coverage as previous object
+2000338* w.r.t. 10 SUN                        Same coverage as previous object
+2000344* w.r.t. 10 SUN                        Same coverage as previous object
+2000345* w.r.t. 10 SUN                        Same coverage as previous object
+2000346* w.r.t. 10 SUN                        Same coverage as previous object
+2000347* w.r.t. 10 SUN                        Same coverage as previous object
+2000349* w.r.t. 10 SUN                        Same coverage as previous object
+2000350* w.r.t. 10 SUN                        Same coverage as previous object
+2000354* w.r.t. 10 SUN                        Same coverage as previous object
+2000356* w.r.t. 10 SUN                        Same coverage as previous object
+2000357* w.r.t. 10 SUN                        Same coverage as previous object
+2000358* w.r.t. 10 SUN                        Same coverage as previous object
+2000360* w.r.t. 10 SUN                        Same coverage as previous object
+2000362* w.r.t. 10 SUN                        Same coverage as previous object
+2000363* w.r.t. 10 SUN                        Same coverage as previous object
+2000365* w.r.t. 10 SUN                        Same coverage as previous object
+2000366* w.r.t. 10 SUN                        Same coverage as previous object
+2000369* w.r.t. 10 SUN                        Same coverage as previous object
+2000372* w.r.t. 10 SUN                        Same coverage as previous object
+2000373* w.r.t. 10 SUN                        Same coverage as previous object
+2000375* w.r.t. 10 SUN                        Same coverage as previous object
+2000377* w.r.t. 10 SUN                        Same coverage as previous object
+2000381* w.r.t. 10 SUN                        Same coverage as previous object
+2000385* w.r.t. 10 SUN                        Same coverage as previous object
+2000386* w.r.t. 10 SUN                        Same coverage as previous object
+2000387* w.r.t. 10 SUN                        Same coverage as previous object
+2000388* w.r.t. 10 SUN                        Same coverage as previous object
+2000389* w.r.t. 10 SUN                        Same coverage as previous object
+2000393* w.r.t. 10 SUN                        Same coverage as previous object
+2000404* w.r.t. 10 SUN                        Same coverage as previous object
+2000405* w.r.t. 10 SUN                        Same coverage as previous object
+2000407* w.r.t. 10 SUN                        Same coverage as previous object
+2000409* w.r.t. 10 SUN                        Same coverage as previous object
+2000410* w.r.t. 10 SUN                        Same coverage as previous object
+2000412* w.r.t. 10 SUN                        Same coverage as previous object
+2000416* w.r.t. 10 SUN                        Same coverage as previous object
+2000419* w.r.t. 10 SUN                        Same coverage as previous object
+2000420* w.r.t. 10 SUN                        Same coverage as previous object
+2000423* w.r.t. 10 SUN                        Same coverage as previous object
+2000424* w.r.t. 10 SUN                        Same coverage as previous object
+2000426* w.r.t. 10 SUN                        Same coverage as previous object
+2000431* w.r.t. 10 SUN                        Same coverage as previous object
+2000433 EROS* w.r.t. 10 SUN                   Same coverage as previous object
+2000442* w.r.t. 10 SUN                        Same coverage as previous object
+2000444* w.r.t. 10 SUN                        Same coverage as previous object
+2000449* w.r.t. 10 SUN                        Same coverage as previous object
+2000451* w.r.t. 10 SUN                        Same coverage as previous object
+2000454* w.r.t. 10 SUN                        Same coverage as previous object
+2000455* w.r.t. 10 SUN                        Same coverage as previous object
+2000466* w.r.t. 10 SUN                        Same coverage as previous object
+2000469* w.r.t. 10 SUN                        Same coverage as previous object
+2000471* w.r.t. 10 SUN                        Same coverage as previous object
+2000476* w.r.t. 10 SUN                        Same coverage as previous object
+2000481* w.r.t. 10 SUN                        Same coverage as previous object
+2000488* w.r.t. 10 SUN                        Same coverage as previous object
+2000489* w.r.t. 10 SUN                        Same coverage as previous object
+2000490* w.r.t. 10 SUN                        Same coverage as previous object
+2000491* w.r.t. 10 SUN                        Same coverage as previous object
+2000498* w.r.t. 10 SUN                        Same coverage as previous object
+2000505* w.r.t. 10 SUN                        Same coverage as previous object
+2000506* w.r.t. 10 SUN                        Same coverage as previous object
+2000508* w.r.t. 10 SUN                        Same coverage as previous object
+2000511* w.r.t. 10 SUN                        Same coverage as previous object
+2000514* w.r.t. 10 SUN                        Same coverage as previous object
+2000521* w.r.t. 10 SUN                        Same coverage as previous object
+2000532* w.r.t. 10 SUN                        Same coverage as previous object
+2000535* w.r.t. 10 SUN                        Same coverage as previous object
+2000536* w.r.t. 10 SUN                        Same coverage as previous object
+2000545* w.r.t. 10 SUN                        Same coverage as previous object
+2000554* w.r.t. 10 SUN                        Same coverage as previous object
+2000566* w.r.t. 10 SUN                        Same coverage as previous object
+2000568* w.r.t. 10 SUN                        Same coverage as previous object
+2000595* w.r.t. 10 SUN                        Same coverage as previous object
+2000596* w.r.t. 10 SUN                        Same coverage as previous object
+2000602* w.r.t. 10 SUN                        Same coverage as previous object
+2000618* w.r.t. 10 SUN                        Same coverage as previous object
+2000626* w.r.t. 10 SUN                        Same coverage as previous object
+2000635* w.r.t. 10 SUN                        Same coverage as previous object
+2000654* w.r.t. 10 SUN                        Same coverage as previous object
+2000663* w.r.t. 10 SUN                        Same coverage as previous object
+2000674* w.r.t. 10 SUN                        Same coverage as previous object
+2000683* w.r.t. 10 SUN                        Same coverage as previous object
+2000690* w.r.t. 10 SUN                        Same coverage as previous object
+2000691* w.r.t. 10 SUN                        Same coverage as previous object
+2000694* w.r.t. 10 SUN                        Same coverage as previous object
+2000702* w.r.t. 10 SUN                        Same coverage as previous object
+2000704* w.r.t. 10 SUN                        Same coverage as previous object
+2000705* w.r.t. 10 SUN                        Same coverage as previous object
+2000709* w.r.t. 10 SUN                        Same coverage as previous object
+2000712* w.r.t. 10 SUN                        Same coverage as previous object
+2000713* w.r.t. 10 SUN                        Same coverage as previous object
+2000739* w.r.t. 10 SUN                        Same coverage as previous object
+2000740* w.r.t. 10 SUN                        Same coverage as previous object
+2000747* w.r.t. 10 SUN                        Same coverage as previous object
+2000751* w.r.t. 10 SUN                        Same coverage as previous object
+2000762* w.r.t. 10 SUN                        Same coverage as previous object
+2000769* w.r.t. 10 SUN                        Same coverage as previous object
+2000772* w.r.t. 10 SUN                        Same coverage as previous object
+2000773* w.r.t. 10 SUN                        Same coverage as previous object
+2000776* w.r.t. 10 SUN                        Same coverage as previous object
+2000780* w.r.t. 10 SUN                        Same coverage as previous object
+2000788* w.r.t. 10 SUN                        Same coverage as previous object
+2000790* w.r.t. 10 SUN                        Same coverage as previous object
+2000791* w.r.t. 10 SUN                        Same coverage as previous object
+2000804* w.r.t. 10 SUN                        Same coverage as previous object
+2000814* w.r.t. 10 SUN                        Same coverage as previous object
+2000849* w.r.t. 10 SUN                        Same coverage as previous object
+2000895* w.r.t. 10 SUN                        Same coverage as previous object
+2000909* w.r.t. 10 SUN                        Same coverage as previous object
+2000914* w.r.t. 10 SUN                        Same coverage as previous object
+2000980* w.r.t. 10 SUN                        Same coverage as previous object
+2001015* w.r.t. 10 SUN                        Same coverage as previous object
+2001021* w.r.t. 10 SUN                        Same coverage as previous object
+2001036* w.r.t. 10 SUN                        Same coverage as previous object
+2001093* w.r.t. 10 SUN                        Same coverage as previous object
+2001467* w.r.t. 10 SUN                        Same coverage as previous object
+

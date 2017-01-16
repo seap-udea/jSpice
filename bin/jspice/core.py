@@ -66,3 +66,4 @@ def _et2str(et):
     deltet=spy.deltet(et,"ET")
     cal=spy.etcal(et-deltet,100)
     return cal
+spy.jet2str=_et2str

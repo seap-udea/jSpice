@@ -151,9 +151,13 @@ popen=subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=ferror,stderr=subp
 #############################################################
 #LOAD SPICE KERNELS
 #############################################################
+ALLKERNELS=[]
+for kernel in glob.glob(DIR+"/"+CONF["kernels_dir"]+"/../*"):
+    if os.path.isdir(kernel):continue
+    ALLKERNELS+=[os.path.basename(kernel)]
 kernels=glob.glob(DIR+"/"+CONF["kernels_dir"]+"/*")
-logEntry(flog,"Loading kernels:"+"{}".format(kernels),sessionid)
 for kernel in kernels:
+    logEntry(flog,"Loading kernel:"+os.path.basename(kernel),sessionid)
     spy.furnsh(kernel)
 logEntry(flog,"SPICE kernels load",sessionid)
 
@@ -162,6 +166,9 @@ print "Listening in port:",port
 #RECEIVE
 #############################################################
 def run():
+    allkernels=ALLKERNELS
+    dirkernel=DIR+"/kernels"
+
     while True:
         cmd=socket.recv()
         if cmd=="jspice=True":

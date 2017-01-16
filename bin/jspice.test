@@ -51,7 +51,12 @@ loadConf(DIR+"/jspice.cfg")
 #############################################################
 #LOAD SPICE KERNELS
 #############################################################
-for kernel in glob.glob(PATH+"/../"+CONF["kernels_dir"]+"/*"):
+ALLKERNELS=[]
+for kernel in glob.glob(DIR+"/"+CONF["kernels_dir"]+"/../*"):
+    if os.path.isdir(kernel):continue
+    ALLKERNELS+=[os.path.basename(kernel)]
+for kernel in glob.glob(DIR+"/"+CONF["kernels_dir"]+"/*"):
+    print "Loading kernel:"+os.path.basename(kernel)
     spy.furnsh(kernel)
 
 #############################################################
@@ -83,10 +88,14 @@ class ComplexEncoder(json.JSONEncoder):
             return jsonpickle.dumps(obj)
          
 def run():
-    et=spy.str2et("01/01/2017 00:00:00")
-    a=np.array([1,2,3])
-    s=spy.spkgps(3,et,"J2000",5)
-    print s
+    #spy.furnsh(DIR+"/kernels/de431_part-1.bsp");spy.furnsh(DIR+"/kernels/de431_part-2.bsp")
+    #spy.furnsh(DIR+"/kernels/de430.bsp")
+    et=spy.str2et("01/01/2017 00:00:00.8187281")
+    print "%.17f"%spy.unitim(et,"ET","JDTDB")
+    print spy.etcal(et,100)
+    s,t=spy.spkgeo(301,et,"ECLIPJ2000",0)
+    print "%.17e %.17e %.17e %.17e %.17e %.17e %.17e\n"%(s[0],s[1],s[2],s[3],s[4],s[5],t)
+
     try:
         exec("b=f(1)")
     except:
