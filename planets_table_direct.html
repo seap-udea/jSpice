@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="css/jspice.css" type="text/css">
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/jspice.js"></script>
+  <script>
+    //Start jspice session
+    var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
+				    proxy_fqdn:"urania.udea.edu.co",
+				    session_type:"nosession",
+				    verbose_depth:0});
+  </script>
+</head>
+<body class="jsp-black">
+<h1>Planet Table</h1>
+Date: <span id="date"></span></h2>
+<table border="1" width="100%">
+  <tr>
+    <td>Planet</td><td>Position</td><td>Velocity</td>
+  </tr>
+
+  <tr><td>Mercury</td><td id="1_position"></td><td id="1_velocity"></td></tr>
+  <tr><td>Venus</td><td id="2_position"></td><td id="2_velocity"></td></tr>
+  <tr><td>Earth</td><td id="3_position"></td><td id="3_velocity"></td></tr>
+  <tr><td>Mars</td><td id="4_position"></td><td id="4_velocity"></td></tr>
+  <tr><td>Jupiter</td><td id="5_position"></td><td id="5_velocity"></td></tr>
+  <tr><td>Saturn</td><td id="6_position"></td><td id="6_velocity"></td></tr>
+  <tr><td>Uranus</td><td id="7_position"></td><td id="7_velocity"></td></tr>
+  <tr><td>Neptune</td><td id="8_position"></td><td id="8_velocity"></td></tr>
+
+</table>
+
+<script>
+//Once jspice session has started...
+jspice_handler.done(function(){
+
+    //Initial date
+    var I=0,MAX=100,TIMEUP=100;
+    var DINI,DEND,TIME=0;
+
+    var dt=86400.0
+    function updatePlanets(){
+	Dt=I*dt;
+	code="Dt="+Dt+`
+
+et0=spy.str2et('01/01/2017 00:00:00')
+
+et=et0+Dt;
+deltet=spy.deltet(et,'ET');
+cal=spy.etcal(et-deltet,100);
+
+spos=[]
+svel=[]
+for i in xrange(1,9):
+    state,ltmp=spy.spkgeo(i,et,'ECLIPJ2000',0)
+    pos=state[:3]
+    vel=state[3:]
+    spos+=[pos]
+    svel+=[vel]
+
+spos=np.array(spos)
+svel=np.array(svel)
+
+`;
+	jspice.command_direct(code).done(function(data){
+	    $("#date").html(jspice.output.cal);
+            var all_pos=eval(jspice.output.spos);
+            var all_vel=eval(jspice.output.svel);
+	    for(var i=0;i<8;i++){
+		var j=i+1;
+		$("#"+j+"_position").html(all_pos[i].toString());
+		$("#"+j+"_velocity").html(all_vel[i].toString());
+	    }
+	});
+	if(I++<MAX)
+	    //setTimeout(updatePlanets,TIMEUP);
+	    window.requestAnimationFrame(updatePlanets);
+	else{
+	    DEND=new Date();
+	    TIME=(DEND-DINI)/1000.0;
+	    alert("Execution time (seconds):"+TIME);
+	}
+    }
+    DINI=new Date();
+    //setTimeout(updatePlanets,TIMEUP);
+    updatePlanets();
+});
+</script>
+
+</body>
+</html>
