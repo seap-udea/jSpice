@@ -41,6 +41,7 @@ params=cgi.FieldStorage();
 sessionid=getArg("sessionid","0"*20,params=params)
 port=int(getArg("port",5500,params=params))
 proxy=getArg("proxy","127.0.0.1",params=params)
+client=getArg("client","127.0.0.1",params=params)
 os.system("mkdir -p %s/sessions/%s"%(DIR,sessionid))
 
 #############################################################
@@ -74,9 +75,10 @@ try:
     socket=context.socket(zmq.REP)
     socket.bind("tcp://%s:%d"%(proxy,port))
     qserv=True
-    logEntry(flog,"Starting session for proxy %s for session %s listening in port %d"%(proxy,
-                                                                                       sessionid,
-                                                                                       port),
+    logEntry(flog,"Starting session for proxy %s invoked from client %s for session %s listening in port %d"%(proxy,
+                                                                                                              client,
+                                                                                                              sessionid,
+                                                                                                              port),
              sessionid)
 except:
     import numpy as np
@@ -98,9 +100,10 @@ except:
             socket=context.socket(zmq.REP)
             socket.bind("tcp://%s:%d"%(proxy,port))
             if port in sports:continue
-            logEntry(flog,"Starting session in proxy %s for session %s listening in port %d"%(proxy,
-                                                                                              sessionid,
-                                                                                              port),
+            logEntry(flog,"Starting session for proxy %s invoked from client %s for session %s listening in port %d"%(proxy,
+                                                                                                                      client,
+                                                                                                                      sessionid,
+                                                                                                                    port),
                      sessionid)
             qserv=True
             break
@@ -123,6 +126,7 @@ pid=os.getpid()
 session=dict(sessionid=sessionid,
              port=port,
              proxy=proxy,
+             client=client,
              timestart=timestart,
              pid=pid)
 logEntry(flog,"Registering session %s in port %d at time %d with pid %s"%(sessionid,port,timestart,pid),sessionid)
@@ -166,7 +170,13 @@ def run():
             rlogEntry=logEntry
 
         rlogEntry(flog,"Command received: %s"%cmd,sessionid)
-        if "exit(" in cmd:break
+        if "exit(" in cmd:
+            if str(sessionid)!="0":
+                print "Stopping"
+                break
+            else:
+                print "This is unstoppable!"
+                cmd="jspice=True"
         try:
             exec(cmd)
             rlogEntry(flog,"Command succesfully executed.",sessionid)

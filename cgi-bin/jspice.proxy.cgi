@@ -63,11 +63,17 @@ timeout=float(getArg("timeout",0.1,params=params))
 callback=getArg("callback","json",params=params)
 server=getArg("server","127.0.0.1",params=params)
 sessionid=getArg("sessionid","0"*20,params=params)
+try:client=cgi.escape(os.environ["REMOTE_ADDR"])
+except:client="127.0.0.1"
 
+#############################################################
+#LOG FILE
+#############################################################
 sessdir="%s/sessions/%s/"%(DIR,sessionid)
 if not os.path.isdir(sessdir):sessdir=DIR+"/log"
 flog=open(sessdir+"/proxy.log","a")
 logEntry(flog,"Proxy invoked calling to port %d of server %s with timeout %.1f"%(port,server,timeout),sessionid)
+logEntry(flog,"Client invoking proxy:%s"%client,sessionid)
 logEntry(flog,"Proxy commands:\n\tCallback:%s\n\tCode:\n\t%s"%(callback,code),sessionid)
 
 #############################################################
@@ -77,7 +83,7 @@ context=zmq.Context()
 socket=Socket(context,zmq.REQ)
 socket.connect("tcp://%s:%s"%(server,port))
 socket.send(code);
-if "exit(" in code:
+if ("exit(" in code) and str(sessionid)!="0":
     logEntry(flog,"Exiting signal to server in port %d"%port)
     print "Exit with code:%s"%code
 else:

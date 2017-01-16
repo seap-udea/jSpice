@@ -59,7 +59,7 @@ var jspice=(function($){
 		//IP of the jSpice proxy
 		proxy:"127.0.0.1",
 
-		//Type of session: dynamic, unique
+		//Type of session: nosession, dynamic, unique
 		session_type:"dynamic",
 
 		//Time between health signals in seconds
@@ -109,9 +109,27 @@ var jspice=(function($){
 		    jsonpCallback:'jsonpCallback'})
 	    .done(function(d){
 		jspice.session_timeout=d.session_timeout;
+		jspice.log("Session timeout:"+jspice.session_timeout,0,"init");
 	    });
-	var session_handler=jspice.startSession();
-	jspice.log(["Properties after initialization:",this],2,"init");
+
+	var session_handler;
+	switch(jspice.session_type){
+	    case "dynamic":{
+		session_handler=jspice.startSession(jspice.sessionid,jspice.proxy,5502);
+		break;
+	    }
+	    case "unique":{
+		session_handler=jspice.startSession("0","127.0.0.1",5500);
+		break;
+	    }
+	    case "nosession":{
+		session_handler={done:function(func){func();}};
+		break;
+	    }
+	}
+		
+
+	jspice.log(["Properties after initialization:",this],0,"init");
 	return session_handler;
     };
 
@@ -218,19 +236,20 @@ var jspice=(function($){
 	}
     };
 
-    jspice.startSession=function(){
-	jspice.log("Starting session.",1,"start");
+    jspice.startSession=function(sessionid=jspice.sessionid,proxy=jspice.proxy,port=5501){
+	jspice.log("Starting session "+sessionid,1,"start");
 	var handler=jspice.run({
 	    url:jspice.session_cgi,
-	    data:{sessionid:jspice.sessionid,
-		  proxy:jspice.proxy,
-		  port:5501},
+	    data:{sessionid:sessionid,
+		  proxy:proxy,
+		  port:port},
 	    type:'POST',
 	    success:function(d){
 		jspice.port=d.port;
+		jspice.log("Session port:"+jspice.port,0,"init");
 	    }
 	}).done(function(x,t,e){
-	    jspice.log("Session started",1,"start");
+	    jspice.log("Session "+sessionid+" started with proxy "+proxy,1,"start");
 	    //Place indicator
 	    jspice.indicator=document.createElement('div');
 	    $(jspice.indicator).

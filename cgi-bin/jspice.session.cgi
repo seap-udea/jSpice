@@ -57,10 +57,12 @@ loadConf(DIR+"/jspice.cfg")
 #CGI PARAMETERS
 #############################################################
 params=cgi.FieldStorage();
-sessionid=getArg("sessionid","0"*20,params=params)
+sessionid=getArg("sessionid","0",params=params)
 callback=getArg("callback","callbackJsonp",params=params)
 port=int(getArg("port",5500,params=params))
-proxy=getArg("proxy","127.0.0.1",params=params)
+proxy=getArg("proxy","*",params=params)
+try:client=cgi.escape(os.environ["REMOTE_ADDR"])
+except:client="*"
 
 #############################################################
 #CHECK IF SESSION IS REGISTERED
@@ -75,7 +77,7 @@ if len(results)>0:
 #############################################################
 #LAUNCH SESSION
 #############################################################
-cmd="%s %s/bin/jspice.session sessionid=%s port=%d proxy=%s"%(CONF["python"],DIR,sessionid,port,proxy)
+cmd="%s %s/bin/jspice.session sessionid=%s port=%d proxy='%s' client='%s'"%(CONF["python"],DIR,sessionid,port,proxy,client)
 logEntry(flog,"Executing cmd:"+cmd)
 
 ferror=open(DIR+"/log/errors.log","a")
@@ -83,5 +85,5 @@ popen=subprocess.Popen(shlex.split(cmd),close_fds=True,stdout=ferror,stderr=subp
 time.sleep(1)
 exec(commands.getoutput("cat %s/sessions/%s/port"%(DIR,sessionid)),globals())
 port=int(CONF["port"])
-print callback+"""({"pid":"%s","port":%d})"""%(popen.pid,port)
+print callback+"""({"pid":"%s","port":%d,"client":"%s"})"""%(popen.pid,port,client)
 

@@ -8,7 +8,8 @@
     //Start jspice session
     var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
 				    proxy_fqdn:"urania.udea.edu.co",
-				    verbose_depth:0});
+				    session_type:"unique",
+				    verbose_depth:1});
   </script>
 </head>
 <body class="jsp-black">
@@ -35,8 +36,16 @@ Date: <span id="date"></span></h2>
 jspice_handler.done(function(){
 
     //Initial date
-    var I=0,MAX=10,TIMEUP=1000;
-    var code="date=spy.jutcnow();et=spy.str2et(date);dt=1*86400;";
+    var I=0,MAX=100,TIMEUP=100;
+    var DINI,DEND,TIME=0;
+    var code=`
+
+date=spy.jutcnow()
+et=spy.str2et(date)
+dt=1*86400
+
+`;
+
     jspice.command(code).done(function(data){$("#date").html(jspice.output.date);});
 
     function updatePlanets(){
@@ -46,11 +55,6 @@ et+=dt;
 deltet=spy.deltet(et,'ET');
 cal=spy.etcal(et-deltet,100);
 
-state3,ltmp=spy.spkgeo(3,et,'ECLIPJ2000',0);
-pos3=state3[:3];
-vel3=state3[3:];
-
-sum=0
 spos=[]
 svel=[]
 for i in xrange(1,9):
@@ -75,9 +79,17 @@ svel=np.array(svel)
 	    }
 	});
 	if(I++<MAX)
-	    setTimeout(updatePlanets,TIMEUP);
+	    //setTimeout(updatePlanets,TIMEUP);
+	    window.requestAnimationFrame(updatePlanets);
+	else{
+	    DEND=new Date();
+	    TIME=(DEND-DINI)/1000.0;
+	    alert("Execution time (seconds):"+TIME);
+	}
     }
-    setTimeout(updatePlanets,TIMEUP);
+    DINI=new Date();
+    //setTimeout(updatePlanets,TIMEUP);
+    updatePlanets();
 });
 </script>
 

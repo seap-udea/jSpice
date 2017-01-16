@@ -72,7 +72,9 @@ while True:
     results=sqlExec("select * from sessions",DIR+"/sessions.db")
     for row in results:
         # Get session information
-        sessionid,port,timestart,pid,proxy=row
+        sessionid,port,timestart,pid,proxy,client=row
+        print "Session information:",sessionid,port,timestart,pid,proxy,client
+        if str(sessionid)=="0":continue
         logEntry(flog,"Checking session %s..."%sessionid)
 
         # Get time of last update
