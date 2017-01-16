@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--
+Complete reference:
+https://plot.ly/javascript/reference
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <script type="text/javascript" src="../js/jquery.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+    body,html{
+	background-color:darkblue;
+    }
+    </style>
+</head>
+<body>
+  <center>
+    <div id="plot"></div>
+  </center>
+
+  <script>
+
+xs=[];ys=[];zs=[]
+for(var t=0;t<=2*Math.PI;t+=0.02*Math.PI){
+    xs.push(1*Math.cos(t));
+    ys.push(1*Math.sin(t));
+    zs.push(0);
+}
+console.log(xs);
+
+var data = [
+    {
+	x: xs,
+	y: ys,
+	z: zs,
+	type: 'scatter3d',
+	marker:{
+	    size:10,
+	    color:'white',
+	},
+	mode:'lines',
+	hoverinfo:'none',
+	projection:{
+	    x:{show:false,},
+	    y:{show:false,},
+	    z:{show:false,},
+	},
+	hovermode:false,
+    }
+];
+
+var layout = {
+    title: 'Prueba',
+    font:{
+	color:'white',
+    },
+    hovermode:false,
+    paper_bgcolor:'gray',
+    width:1200,
+    height:600,
+    scene:{
+	highlight:false,
+	hovermode:false,
+	aspectmode:'manual',
+	aspectratio:{x:2,y:2,z:1},
+	camera:{
+	    eye:{x:1,y:1,z:1},
+	    up:{x:0,y:0,z:1},
+	    center:{x:0,y:0,z:0},
+	},
+	bgcolor:'darkgreen',
+	//dragmode:'orbit',
+	dragmode:'turntable',
+	xaxis: {
+	    title:'',
+	    showticklabels:false,
+	    //showgrid:true,
+	    zeroline:false,
+	    title:'',
+	    //mirror:true,
+	    range:[-1.5,1.5],
+	    showspikes:false,
+	    color:'white',
+	    gridwith:3,
+	},
+	yaxis: {
+	    showticklabels:false,
+	    //showgrid:false,
+	    zeroline:false,
+	    title:'',
+	    range:[-1.5,1.5],
+	    showspikes:false,
+	    color:'white',
+	},
+	zaxis: {
+	    showticklabels:false,
+	    //showgrid:false,
+	    zeroline:false,
+	    title:'',
+	    //showbackground:true,
+	    range:[-1.5,1.5],
+	    showspikes:false,
+	    color:'white',
+	},
+	hovermode:'x',
+    },
+};
+
+/*
+All options:
+https://github.com/plotly/plotly.js/blob/master/src/plot_api/plot_config.js
+*/
+var options = {
+    displayModeBar:false,
+    displaylogo:false,
+}
+
+Plotly.plot('plot',data,layout,options);
+
+//Animate
+var zini=0;
+function updateData(){
+    zs=[]
+    for(var t=0;t<=2*Math.PI;t+=0.02*Math.PI){
+	zs.push(zini);
+    }
+    data[0].z=zs;
+    Plotly.redraw('plot');
+    zini+=0.01
+    if(zini<1)
+	window.requestAnimationFrame(updateData);
+}
+updateData();
+
+  </script>
+  
+</body>
+</html>
