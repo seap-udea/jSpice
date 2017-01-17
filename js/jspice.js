@@ -115,14 +115,17 @@ var jspice=(function($){
 	var session_handler;
 	switch(jspice.session_type){
 	    case "dynamic":{
+		jspice.log("Session dynamic");
 		session_handler=jspice.startSession(jspice.sessionid,jspice.proxy,5502);
 		break;
 	    }
 	    case "unique":{
+		jspice.log("Session unique");
 		session_handler=jspice.startSession("0","127.0.0.1",5500);
 		break;
 	    }
 	    case "nosession":{
+		jspice.log("No session");
 		session_handler={done:function(func){func();}};
 		break;
 	    }
@@ -254,7 +257,7 @@ var jspice=(function($){
 	    jspice.indicator=document.createElement('div');
 	    $(jspice.indicator).
 		addClass('jsp jsp-indicator').
-		html('Powered by jSpice').
+		html('Powered by <a href="https://github.com/seap-udea/jSpice" target="_blank">jSpice</a>').
 		appendTo($("body"));
 	    //Launch health checker
 	    jspice.healthCheck();

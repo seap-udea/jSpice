@@ -32,7 +32,8 @@ PATH=os.path.realpath(
             inspect.currentframe()))[0]))
 DIR=PATH+"/../"
 sys.path.insert(0,DIR+"/bin")
-from jspice.core import *
+from jspice import *
+from jspice.spicext import *
 
 #############################################################
 #CGI PARAMETERS
@@ -70,7 +71,6 @@ flog=open("%s/sessions/%s/session.log"%(DIR,sessionid),"a")
 qserv=False
 try:
     # Testing provided port 
-    context=zmq.Context()
     context=zmq.Context()
     socket=context.socket(zmq.REP)
     socket.bind("tcp://%s:%d"%(proxy,port))

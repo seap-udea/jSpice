@@ -32,7 +32,8 @@ PATH=os.path.realpath(
             inspect.currentframe()))[0]))
 DIR=PATH+"/../"
 sys.path.insert(0,DIR+"/bin")
-from jspice.core import *
+from jspice import *
+from jspice.spicext import *
 
 #############################################################
 #LOG FILE

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="css/jspice.css" type="text/css">
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/jspice.js"></script>
+  <script type="text/javascript" src="js/sprintf.js"></script>
+  <script>
+    //Start jspice session
+    var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
+				    proxy_fqdn:"urania.udea.edu.co",
+				    /*session_type:"unique",*/
+				    session_type:"dynamic",
+				    verbose_depth:0});
+  </script>
+  <style>
+    .container{
+	margin:auto;
+	width:100vw;
+	height:50vh;
+	display:table-cell;
+	vertical-align:middle;
+	text-align:center;
+    }
+    .clock{
+	display:inline-block;
+	width:8em;
+	font-family:courier;
+	font-size:4em;
+	border:solid white 1px;
+	font-family:courier;
+	background-image:url('img/backclock.png');
+	color:red;
+	border:solid #333333 5px;
+	padding:3px;
+    }
+    .title{
+	font-size:1.5em;
+	padding:5px;
+    }
+    @keyframes blinker{50%{opacity:0;}}
+    .blink{
+	animation: blinker 1s linear infinite;
+	padding:5px;
+    }
+  </style>
+</head>
+<body class="jsp-black">
+  <div class="container">
+    <div class="title">Greenwich Apparent Sidereal Time</div>
+    <div class="clock">
+    <span id="hour">22</span><span class="blink">:</span><span id="minute">00</span><span class="blink">:</span><span id="second">00</span>
+    </div>
+  </div>
+  <script>
+jspice_handler.done(function(){
+    var code=`
+
+def siderealTime(et):
+    ITRF93toJ2000=spy.pxform('ITRF93','J2000',et)
+    J2000toETRUE=spy.pxform('J2000','EARTHTRUEEPOCH',et)
+    rzero_ITRF93=np.array([6378.1366,0,0])
+    rzero_ETRUE=spy.mxv(J2000toETRUE,spy.mxv(ITRF93toJ2000,rzero_ITRF93))
+    gst=np.mod(np.arctan2(rzero_ETRUE[1],rzero_ETRUE[0])*spy.jrad()/15,24)
+    return gst
+                          
+`;
+    function updateTime()
+    {
+	code=`
+tnow=spy.str2et(spy.jutcnow())
+gst=siderealTime(tnow)
+gst_sex=spy.jdec2sex(gst)
+`;
+	jspice.command(code).done(function(data){
+	    jspice.log(["GST",jspice.output]);
+	    var gst=eval(jspice.output.gst_sex)
+	    jspice.log(["GST:",gst]);
+	    $("#hour").html(gst[0]);
+	    $("#minute").html(gst[1]);
+	    var seconds=Math.round(100*gst[2])/100;
+	    var iseconds=Math.floor(seconds);
+	    var dseconds=(seconds-iseconds)*100
+	    //$("#second").html(sprintf("%02.2f",seconds));
+	    $("#second").html(
+		sprintf("%02d",iseconds)+"."+
+		    sprintf("%02d",dseconds));
+	    setTimeout(updateTime,500);
+	});
+    }
+    
+    jspice.command(code).done(function(data){
+	jspice.log(jspice.output.siderealTime);
+	updateTime();
+    });
+});
+
+  </script>
+</center>
+</body>
+</html>

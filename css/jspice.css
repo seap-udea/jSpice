@@ -20,6 +20,10 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 html,body{
     font-family:helvetica;
 }
+a,a:active,a:visited,a:hover{
+    color:inherit;
+    
+}
 .jsp-black{
     background-color:black;
     color:white;

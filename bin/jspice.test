@@ -27,7 +27,8 @@ PATH=os.path.realpath(
             inspect.currentframe()))[0]))
 DIR=PATH+"/.."
 sys.path.insert(0,DIR+"/bin")
-from jspice.core import *
+from jspice import *
+from jspice.spicext import *
 
 #############################################################
 #LOG FILE
@@ -90,16 +91,11 @@ class ComplexEncoder(json.JSONEncoder):
 def run():
     #spy.furnsh(DIR+"/kernels/de431_part-1.bsp");spy.furnsh(DIR+"/kernels/de431_part-2.bsp")
     #spy.furnsh(DIR+"/kernels/de430.bsp")
-    et=spy.str2et("01/01/2017 00:00:00.8187281")
+    et=spy.str2et("01/01/2017 00:00:00")
     print "%.17f"%spy.unitim(et,"ET","JDTDB")
     print spy.etcal(et,100)
-    s,t=spy.spkgeo(301,et,"ECLIPJ2000",0)
+    s,t=spy.spkgeo(3,et,"ECLIPJ2000",0)
     print "%.17e %.17e %.17e %.17e %.17e %.17e %.17e\n"%(s[0],s[1],s[2],s[3],s[4],s[5],t)
-
-    try:
-        exec("b=f(1)")
-    except:
-        pass
 
     def f(x):
         return x**2
@@ -118,7 +114,26 @@ def run():
     dt=1
     et=2
     cmd="\n\net+=dt;\ndeltet=spy.deltet(et,'ET');\ncal=spy.etcal(et-deltet,100);\n\nstate3,ltmp=spy.spkgeo(3,et,'ECLIPJ2000',0);\npos3=state3[:3];\nvel3=state3[3:];\n\nsum=0\n"
-    exec(cmd)
+    #exec(cmd)
+    
+    REARTH=6378.1366
+    FEARTH=0.0033528131084554717
 
+    et=spy.str2et(spy.jutcnow())
+    p=spy.mxv(spy.pxform("J2000","EARTHTRUEEPOCH",et),spy.mxv(spy.pxform("ITRF93","J2000",et),np.array([REARTH,0,0])))
+    gst=np.mod(np.arctan2(p[1],p[0])*spy.jrad()/15,24)
+    gst=spy.jdec2sex(gst)
+    print "GST: ",gst
+
+    def siderealTime(et):
+        ITRF93toJ2000=spy.pxform('ITRF93','J2000',et)
+        J2000toETRUE=spy.pxform('J2000','EARTHTRUEEPOCH',et)
+        rzero_ITRF93=np.array([6378.1366,0,0])
+        rzero_ETRUE=spy.mxv(J2000toETRUE,spy.mxv(ITRF93toJ2000,rzero_ITRF93))
+        gst=np.mod(np.arctan2(rzero_ETRUE[1],rzero_ETRUE[0])*spy.jrad()/15,24)
+        return gst
+
+    print siderealTime(et)
+    
 
 run()

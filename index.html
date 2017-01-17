@@ -17,8 +17,8 @@
     </h1>
     <h2 id="sessionid"></h2>
 
-    <button onclick="jspice.startSession()">Start session</button>
-    <button onclick="jspice.stopSession()">Stop session</button>
+    <button onclick="$('#history').html('');jspice.startSession();execCode()">Start session</button>
+    <button onclick="$('#history').html('');jspice.stopSession()">Stop session</button>
   </center>
 
   <p>

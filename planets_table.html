@@ -9,7 +9,7 @@
     var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
 				    proxy_fqdn:"urania.udea.edu.co",
 				    session_type:"unique",
-				    verbose_depth:1});
+				    verbose_depth:0});
   </script>
 </head>
 <body class="jsp-black">
@@ -30,23 +30,28 @@ Date: <span id="date"></span></h2>
   <tr><td>Neptune</td><td id="8_position"></td><td id="8_velocity"></td></tr>
 
 </table>
+Execution time:<span id="time"></span>
 
 <script>
 //Once jspice session has started...
 jspice_handler.done(function(){
 
     //Initial date
-    var I=0,MAX=100,TIMEUP=100;
+    var I=0,MAX=1000,TIMEUP=100;
     var DINI,DEND,TIME=0;
     var code=`
 
-date=spy.jutcnow()
-et=spy.str2et(date)
+et=spy.str2et('01/01/2017 00:00:00')
+cal=spy.etcal(et,100)
 dt=1*86400
 
 `;
 
-    jspice.command(code).done(function(data){$("#date").html(jspice.output.date);});
+    jspice.command(code).done(function(data){
+	$("#date").html(jspice.output.cal);
+	DINI=new Date();
+	updatePlanets();
+    });
 
     function updatePlanets(){
 	code=`
@@ -68,7 +73,8 @@ spos=np.array(spos)
 svel=np.array(svel)
 
 `;
-	jspice.command(code).done(function(data){
+	var h=jspice.command(code);
+	h.done(function(data){
 	    $("#date").html(jspice.output.cal);
             var all_pos=eval(jspice.output.spos);
             var all_vel=eval(jspice.output.svel);
@@ -76,20 +82,15 @@ svel=np.array(svel)
 		var j=i+1;
 		$("#"+j+"_position").html(all_pos[i].toString());
 		$("#"+j+"_velocity").html(all_vel[i].toString());
+		DEND=new Date();
+		TIME=(new Date()-DINI)/1000.0;
+		$("#time").html(TIME);
 	    }
 	});
 	if(I++<MAX)
 	    //setTimeout(updatePlanets,TIMEUP);
 	    window.requestAnimationFrame(updatePlanets);
-	else{
-	    DEND=new Date();
-	    TIME=(DEND-DINI)/1000.0;
-	    alert("Execution time (seconds):"+TIME);
-	}
     }
-    DINI=new Date();
-    //setTimeout(updatePlanets,TIMEUP);
-    updatePlanets();
 });
 </script>
 

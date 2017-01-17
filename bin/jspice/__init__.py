@@ -63,11 +63,13 @@ def loadConf(filecfg):
     return conf
 
 def logEntry(flog,entry,instance="root"):
+    """
     time=datetime.datetime.now().strftime("%m/%d/%y %H:%M:%S")
     log="[%s] [%s] %s\n"%(time,instance,entry)
     flog.write(log)
     flog.flush()
     #print>>stderr,log,
+    """
 
 def logEntryClean(flog,entry,instance="root"):
     pass
