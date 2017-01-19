@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="css/jspice.css" type="text/css">
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/jspice.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script>
+  </script>
+</head>
+<body class="jsp-black">
+  <center>
+    <span id="date"></span><br/>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+    <div id="solar_system"></div>
+  </center>
+  <script>
+var ANIMATE=0;
+
+////////////////////////////////////////////////////////////////////////
+// jSpice SCRIPT
+////////////////////////////////////////////////////////////////////////
+var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
+				proxy_fqdn:"urania.udea.edu.co",
+				session_type:"dynamic",
+				verbose_depth:0});
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//LAYOUT AND OPTIONS
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+var options = {
+    displayModeBar:1,
+    displaylogo:0,
+}
+var vmax=40.5,vmin=-vmax;
+
+var layout = {
+    //paper_bgcolor:'gray',
+    paper_bgcolor:'black',
+    width:1200,
+    height:600,
+
+    font:{color:'white',},
+    hovermode:false,
+    showlegend:false,
+
+    scene:{
+	highlight:false,
+	hovermode:false,
+	aspectmode:'manual',
+	aspectratio:{x:2,y:2,z:1},
+	camera:{
+	    eye:{x:1,y:1,z:1},
+	    up:{x:0,y:0,z:1},
+	    center:{x:0,y:0,z:0},
+	},
+	//bgcolor:'darkgreen',
+	bgcolor:'black',
+	//dragmode:'orbit',
+	dragmode:'turntable',
+
+	xaxis: {
+	    title:'',
+	    showticklabels:false,
+	    showgrid:false,
+	    zeroline:false,
+	    title:'',
+	    //mirror:true,
+	    range:[vmin,vmax],
+	    showspikes:false,
+	    color:'white',
+	    gridwith:3,
+	},
+
+	yaxis: {
+	    showticklabels:false,
+	    showgrid:false,
+	    zeroline:false,
+	    title:'',
+	    range:[vmin,vmax],
+	    showspikes:false,
+	    color:'white',
+	},
+
+	zaxis: {
+	    showticklabels:false,
+	    showgrid:false,
+	    zeroline:false,
+	    title:'',
+	    //showbackground:true,
+	    range:[vmin,vmax],
+	    showspikes:false,
+	    color:'white',
+	},
+    },
+};
+
+var REQID;
+var AU=1.5e8;
+var DAY=86400.0;
+var data=[]
+var NPLANETS=9
+
+for(var i=0;i<NPLANETS;i++){
+    var color='white';
+    var size=4;
+    if(i==0){
+	color='yellow';
+	size=6;
+    }
+    rpos={
+	x:[100],
+	y:[100],
+	z:[100],
+	type:'scatter3d',
+	marker:{
+	    size:size,
+	    color:color,
+	},
+    }
+    data.push(rpos);
+}
+Plotly.plot('solar_system',data,layout,options);
+
+jspice_handler.done(function(){
+    var code="nplanets="+NPLANETS+`
+DAY=86400.0
+AU=1.5e8
+t=spy.str2et(spy.jutcnow());
+dt=10*DAY;
+
+def systemGps(t):
+    global nplanets
+    rs=[]
+    for i in xrange(0,nplanets):
+        r,lt=spy.spkgps(i,t,'ECLIPJ2000',0)
+        rs+=[r]
+    rs=np.array(rs);
+    return rs
+
+mu=132712440042.0
+Porbs=[]
+for i in xrange(1,nplanets):
+    x,lt=spy.spkgeo(i,t,'ECLIPJ2000',0)
+    es=spy.oscelt(x,t,mu)
+    q=es[0];e=es[1]
+    a=q/(1-e)
+    Porbs+=[((4*np.pi**2/mu)*a**3)**0.5]
+Porbs=np.array(Porbs)
+
+traces=[]
+for i in xrange(0,nplanets):
+    trace=[]
+    xs=[];ys=[];zs=[]
+    if i>0:Porb=Porbs[i-1]
+    else:Porb=0
+    for tr in np.linspace(t,t+1.05*Porb,60):
+        r,lt=spy.spkgps(i,tr,'ECLIPJ2000',0)
+        xs+=[r[0]/AU];ys+=[r[1]/AU];zs+=[r[2]/AU];
+    trace=[xs,ys,zs]
+    traces+=[np.array(trace)]
+    del(trace,xs,ys,zs)
+traces=np.array(traces)
+
+`;
+
+    function updatePlanet()
+    {
+	var code=`
+rs=systemGps(t)
+cal=spy.etcal(t,100)
+t+=dt;
+`;
+	jspice.command(code).done(function(){
+	    var rs=eval(jspice.output.rs);
+	    for(var i=0;i<rs.length;i++){
+		r=rs[i];
+		jspice.log(data[i]);
+		data[i].x=[r[0]/AU];
+		data[i].y=[r[1]/AU];
+		data[i].z=[r[2]/AU];
+	    }
+	    Plotly.redraw('solar_system');
+	    $("#date").html(jspice.output.cal);
+	    if(ANIMATE){
+		window.requestAnimationFrame(updatePlanet);
+		//setTimeout(updatePlanet,10);
+	    }
+	});
+    }
+
+    jspice.command(code).done(function(){
+	traces=eval(jspice.output.traces);
+	var ptraces=[]
+	for(var i=0;i<traces.length;i++){
+	    var trace=traces[i];
+	    var tr={
+		x:trace[0],
+		y:trace[1],
+		z:trace[2],
+		type:'scatter3d',
+		marker:{
+		    size:size,
+		    color:color,
+		},
+		mode:'lines',
+	    }
+	    ptraces.push(tr);
+	}
+	Plotly.plot('solar_system',ptraces,layout,options);
+	updatePlanet();
+    });
+
+    $("#start").click(function(){
+	ANIMATE=true;
+	updatePlanet();
+    });
+
+    $("#stop").click(function(){
+	ANIMATE=false;
+    });
+
+});
+  </script>
+</body>
+</html>

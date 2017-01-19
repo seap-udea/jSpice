@@ -5,14 +5,6 @@
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript" src="js/jspice.js"></script>
   <script type="text/javascript" src="js/sprintf.js"></script>
-  <script>
-    //Start jspice session
-    var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
-				    proxy_fqdn:"urania.udea.edu.co",
-				    /*session_type:"unique",*/
-				    session_type:"dynamic",
-				    verbose_depth:0});
-  </script>
   <style>
     .container{
 	margin:auto;
@@ -49,10 +41,22 @@
   <div class="container">
     <div class="title">Greenwich Apparent Sidereal Time</div>
     <div class="clock">
-    <span id="hour">22</span><span class="blink">:</span><span id="minute">00</span><span class="blink">:</span><span id="second">00</span>
+    <span id="hour">--</span><span class="blink">:</span><span id="minute">--</span><span class="blink">:</span><span id="second">--.--</span>
     </div>
   </div>
   <script>
+
+////////////////////////////////////////////////////////////////////////
+// jSpice SCRIPT
+////////////////////////////////////////////////////////////////////////
+
+//Start jspice session
+var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
+				proxy_fqdn:"urania.udea.edu.co",
+				/*session_type:"unique",*/
+				session_type:"dynamic",
+				verbose_depth:0});
+
 jspice_handler.done(function(){
     var code=`
 
@@ -65,6 +69,7 @@ def siderealTime(et):
     return gst
                           
 `;
+
     function updateTime()
     {
 	code=`
@@ -76,8 +81,8 @@ gst_sex=spy.jdec2sex(gst)
 	    jspice.log(["GST",jspice.output]);
 	    var gst=eval(jspice.output.gst_sex)
 	    jspice.log(["GST:",gst]);
-	    $("#hour").html(gst[0]);
-	    $("#minute").html(gst[1]);
+	    $("#hour").html(sprintf("%02d",gst[0]));
+	    $("#minute").html(sprintf("%02d",gst[1]));
 	    var seconds=Math.round(100*gst[2])/100;
 	    var iseconds=Math.floor(seconds);
 	    var dseconds=(seconds-iseconds)*100

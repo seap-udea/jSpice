@@ -134,6 +134,18 @@ def run():
         return gst
 
     print siderealTime(et)
-    
+
+    print spy.bodc2s(399,100)
+    n,gm=spy.bodvrd("SUN","GM",1)
+    print gm[0]
+    x,lt=spy.spkgeo(3,et,"ECLIPJ2000",0)
+    print x
+    es=spy.oscelt(x,et,gm[0])
+    q=es[0];e=es[1]
+    a=q/(1-e)
+    print a
+
+    x,lt=spy.spkgeo(5,et,"ECLIPJ2000",0)
+    print x
 
 run()

@@ -23,6 +23,7 @@ from spiceypy import wrapper as spy
 #############################################################
 import time,datetime
 import numpy as np
+np.set_printoptions(threshold='nan')	
 
 #############################################################
 #EXTEND SPICE
