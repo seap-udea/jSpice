@@ -297,6 +297,13 @@ var jspice=(function($){
 	obj=data.response;
     };
 
+    jspice.UTCnow=function(){
+	var dfecha=new Date();
+	var mes=dfecha.getUTCMonth()+1;
+	var fecha=mes+'/'+dfecha.getUTCDate()+'/'+dfecha.getUTCFullYear()+' '+dfecha.getUTCHours()+':'+dfecha.getUTCMinutes()+':'+dfecha.getUTCSeconds();
+	return fecha;
+    }
+
     return jspice;
 }($));
 

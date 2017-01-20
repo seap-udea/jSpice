@@ -10,9 +10,12 @@
 </head>
 <body class="jsp-black">
   <center>
-    <span id="date"></span><br/>
-    <button id="start">Start</button>
-    <button id="stop">Stop</button>
+    <div style="position:fixed;left:0px;top:0px;z-index:10;width:100%;margin:auto">
+      <input type="text" size=40 name="date" id="date" style="text-align:center;background:black;color:white;padding:10px;font-size:1.1em;border:none;border-bottom:solid white 1px;margin-bottom:5px"><br/>
+      <button id="now">Now</button>
+      <button id="start">Start</button>
+      <button id="stop">Stop</button>
+    </div>
     <div id="solar_system"></div>
   </center>
   <script>
@@ -32,6 +35,7 @@ var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
 var options = {
     displayModeBar:1,
     displaylogo:0,
+    frameMargins:10,
 }
 var vmax=40.5,vmin=-vmax;
 
@@ -165,14 +169,20 @@ traces=np.array(traces)
 
 `;
 
-    function updatePlanet()
+    function updatePlanet(date=null)
     {
-	var code=`
+	var code="";
+	if(date){
+	    code+="t=spy.str2et('"+date+"');\n"
+	}
+
+	code+=`
 rs=systemGps(t)
-cal=spy.etcal(t,100)
+cal=spy.jet2str(t)
 t+=dt;
 `;
 	jspice.command(code).done(function(){
+	    jspice.log(jspice.output,0);
 	    var rs=eval(jspice.output.rs);
 	    for(var i=0;i<rs.length;i++){
 		r=rs[i];
@@ -182,9 +192,9 @@ t+=dt;
 		data[i].z=[r[2]/AU];
 	    }
 	    Plotly.redraw('solar_system');
-	    $("#date").html(jspice.output.cal);
+	    $("#date").val(jspice.output.cal);
 	    if(ANIMATE){
-		window.requestAnimationFrame(updatePlanet);
+		window.requestAnimationFrame(function(){updatePlanet(date);});
 		//setTimeout(updatePlanet,10);
 	    }
 	});
@@ -210,6 +220,15 @@ t+=dt;
 	}
 	Plotly.plot('solar_system',ptraces,layout,options);
 	updatePlanet();
+    });
+
+    $("#date").change(function(){
+	updatePlanet($(this).val());
+    });
+
+    $("#now").click(function(){
+	var date=jspice.UTCnow();
+	updatePlanet(date);
     });
 
     $("#start").click(function(){
