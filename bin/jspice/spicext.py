@@ -17,7 +17,7 @@
 #Function: an axtension to SpiceyPy
 #############################################################
 from spiceypy import wrapper as spy
-
+import spiceypy.support_types as spytypes
 #############################################################
 #EXTERNAL MODULES
 #############################################################
@@ -76,11 +76,14 @@ spy.jet2str=_et2str
 def _dec2sex(dec,sep=None,day=False):
     if day:fac=24
     else:fac=60
+    sgn=np.sign(dec)
+    dec=np.abs(dec)
     H=np.floor(dec)
     mm=(dec-H)*fac
     M=np.floor(mm)
     ss=(mm-M)*60;
     S=np.floor(ss);
+    H=sgn*H
     if not sep is None:
         return "%02d%s%02d%s%02.3f"%(int(H),sep[0],int(M),sep[1],ss)
     return [H,M,ss]

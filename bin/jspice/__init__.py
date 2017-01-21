@@ -49,6 +49,10 @@ DB=None
 CON=None
 SIGNALS=[signal.SIGABRT,signal.SIGFPE,signal.SIGILL,
          signal.SIGINT,signal.SIGSEGV,signal.SIGTERM]
+MIN=60.0
+HOUR=60*MIN
+DAY=24*HOUR
+YEAR=365.25*DAY
 
 #############################################################
 #UTIL ROUTINES

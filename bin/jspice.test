@@ -88,7 +88,93 @@ class ComplexEncoder(json.JSONEncoder):
         except TypeError:
             return jsonpickle.dumps(obj)
          
+RAD=180/np.pi
+DEG=1/RAD
+
 def run():
+
+
+    #et1=spy.str2et('08/21/2017 22:48:24.1 UTC')
+    lat=+38*DEG
+    lon=-90*DEG
+    alt=1000 # m
+
+    et1=spy.str2et('01/01/2017 00:00:00 UTC')
+    et2=spy.str2et('12/01/2017 23:00:00 UTC')
+    step=1*MIN
+
+    EJ2000toJ2000=spy.pxform("ECLIPJ2000","J2000",et1)
+    J2000toEJ2000=spy.pxform("J2000","ECLIPJ2000",et1)
+    J2000toEpoch=spy.pxform("J2000","EARTHTRUEEPOCH",et1)
+    ITRF93toEJ2000=spy.pxform("ITRF93","ECLIPJ2000",et1)
+
+    n,radii=spy.bodvrd("earth","RADII",3);
+    RE=radii[0];
+    FE=(radii[0]-radii[2])/radii[0];
+    n,radii=spy.bodvrd("moon","RADII",3);
+    RM=radii[0];
+    FM=(radii[0]-radii[2])/radii[0];
+
+    obsITRF93=spy.georec(lon,lat,alt/1000,RE,FE)
+    obsEJ2000=spy.mxv(ITRF93toEJ2000,obsITRF93)
+
+    earthSSBEJ2000,ltmp=spy.spkezr("earth",et1,"ECLIPJ2000","NONE","SOLAR SYSTEM BARYCENTER")
+    obsSSBEJ2000=spy.vadd(earthSSBEJ2000[:3],obsEJ2000)
+
+    print obsEJ2000
+    print earthSSBEJ2000
+    print "%.17e %.17e %.17e"%(obsSSBEJ2000[0],obsSSBEJ2000[1],obsSSBEJ2000[2])
+
+    body="moon"
+    bodySSBEJ2000,ltmp=spy.spkezr(body,et1,"ECLIPJ2000","NONE","SOLAR SYSTEM BARYCENTER")
+    print "%.17e %.17e %.17e"%(bodySSBEJ2000[0],bodySSBEJ2000[1],bodySSBEJ2000[2])
+
+    t=et1
+    lt=0
+    bodySSBEJ2000,ltmp=spy.spkezr(body,t-lt,"ECLIPJ2000","NONE","SOLAR SYSTEM BARYCENTER")
+    bodyTOPOEJ2000=spy.vsub(bodySSBEJ2000[:3],obsSSBEJ2000[:3])
+    print "Moon before correction: %.17e %.17e %.17e"%(bodyTOPOEJ2000[0],bodyTOPOEJ2000[1],bodyTOPOEJ2000[2])
+
+    lt=1;ltold=0;lttol=1e-10;ncn=10;i=0
+    t=et1
+    while np.abs((lt-ltold)/lt)>=lttol and i<ncn:
+        ltold=lt
+        bodySSBEJ2000,ltmp=spy.spkezr(body,t-lt,"ECLIPJ2000","NONE","SOLAR SYSTEM BARYCENTER")
+        bodyTOPOEJ2000=spy.vsub(bodySSBEJ2000[:3],obsSSBEJ2000[:3])
+        d=spy.vnorm(bodyTOPOEJ2000)
+        lt=d/spy.clight()
+        i+=1
+
+    print "Moon after correction: %.17e %.17e %.17e"%(bodyTOPOEJ2000[0],bodyTOPOEJ2000[1],bodyTOPOEJ2000[2])
+    
+    #bodyTOPOJ2000=spy.mxv(J2000toEJ2000,bodyTOPOEJ2000)
+    bodyTOPOJ2000=spy.mxv(EJ2000toJ2000,bodyTOPOEJ2000)
+
+    d,RAJ2000,DECJ2000=spy.recrad(bodyTOPOJ2000[:3])
+    print "%.17e"%d
+    print spy.jdec2sex(RAJ2000*RAD/15)
+    print spy.jdec2sex(DECJ2000*RAD)
+
+    #for t in np.arange(et1,et2,step):
+    exit(0)
+    
+    window=spytypes.SPICEDOUBLE_CELL(2)
+    result=spytypes.SPICEDOUBLE_CELL(1000)
+    spy.wninsd(et1,et2,window)
+    
+    result=spytypes.SPICEDOUBLE_CELL(200)
+    spy.gfoclt("any","moon","ellipsoid","iau_moon", 
+               "sun","ellipsoid","iau_sun", 
+               "lt","earth",step,
+                window,result);    
+    
+    print spy.wncard(window)
+
+    tl,tr=spy.wnfetd(result,0)
+    
+    print spy.timout(tl,'YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND',40)
+
+    exit(0)
     #spy.furnsh(DIR+"/kernels/de431_part-1.bsp");spy.furnsh(DIR+"/kernels/de431_part-2.bsp")
     #spy.furnsh(DIR+"/kernels/de430.bsp")
     et=spy.str2et("01/01/2017 00:00:00")
