@@ -1,0 +1,175 @@
+#!/usr/bin/python
+#############################################################
+#             /######            /##                        #
+#            /##__  ##          |__/                        #
+#        /##| ##  \__/  /######  /##  /#######  /######     #
+#       |__/|  ######  /##__  ##| ## /##_____/ /##__  ##    #
+#        /## \____  ##| ##  \ ##| ##| ##      | ########    #
+#       | ## /##  \ ##| ##  | ##| ##| ##      | ##_____/    #
+#       | ##|  ######/| #######/| ##|  #######|  #######    #
+#       | ## \______/ | ##____/ |__/ \_______/ \_______/    #
+#  /##  | ##          | ##                                  #
+# |  ######/          | ##                                  #
+#  \______/           |__/                                  #
+#							    #
+#                 Jorge I. Zuluaga (C) 2016		    #
+#############################################################
+# Function: jSpice kernel
+#############################################################
+
+#############################################################
+#EXTERNAL MODULES
+#############################################################
+import sys,os,inspect
+PATH=os.path.realpath(
+    os.path.abspath(os.path.split(
+        inspect.getfile(
+            inspect.currentframe()))[0]))
+DIR=PATH+"/.."
+sys.path.insert(0,DIR+"/bin")
+from jspice import *
+from jspice.spicext import *
+
+#############################################################
+#LOG FILE
+#############################################################
+flog=open(DIR+"/log/epehem.log","a")
+
+#############################################################
+#CANCEL BEHAVIOR
+#############################################################
+def sigHandler(signal,frame):
+    import sys
+    logEntry(flog,"Terminating ephemeris")
+    sys.exit(0)
+signal.signal(signal.SIGINT,sigHandler)
+
+#############################################################
+#READ CONFIGURATION FILE
+#############################################################
+loadConf(DIR+"/jspice.cfg")
+
+#############################################################
+#LOAD SPICE KERNELS
+#############################################################
+ALLKERNELS=[]
+for kernel in glob.glob(DIR+"/"+CONF["kernels_dir"]+"/../*"):
+    if os.path.isdir(kernel):continue
+    ALLKERNELS+=[os.path.basename(kernel)]
+for kernel in glob.glob(DIR+"/"+CONF["kernels_dir"]+"/*"):
+    print "Loading kernel:"+os.path.basename(kernel)
+    spy.furnsh(kernel)
+
+
+#############################################################
+#TEST CODE
+#############################################################
+RAD=180/np.pi
+DEG=1/RAD
+
+n,radii=spy.bodvrd("EARTH","RADII",3)
+RE=radii[0]
+RP=radii[2]
+FE=(RE-RP)/RE
+
+n,radii=spy.bodvrd("moon","RADII",3);
+RM=radii[0];
+FM=(radii[0]-radii[2])/radii[0];
+
+def hormat(lat,lon):
+    ux=[1,0,0];uy=[0,1,0];uz=[0,0,1]
+    geopos=spy.georec(lon*DEG,lat*DEG,0.0,RE,FE)
+    normal=spy.surfnm(RE,RE,RP,geopos)
+    uy=spy.ucrss(normal,uz)
+    ux=spy.ucrss(uy,normal)
+    h2m=np.zeros((3,3))
+    h2m[0,0]=ux[0];h2m[0,1]=ux[1];h2m[0,2]=ux[2];
+    h2m[1,0]=uy[0];h2m[1,1]=uy[1];h2m[1,2]=uy[2];
+    h2m[2,0]=normal[0];h2m[2,1]=normal[1];h2m[2,2]=normal[2];
+    h2i=spy.invert(h2m);
+    return h2m,h2i
+
+def run():
+    
+    # Numeric paraneters
+    lt=1;ltold=0;lttol=1e-10;ncn=10;i=0
+
+    # Geographic Partial
+    lat=+38.0
+    lon=-90.0
+    alt=1000.0 # m
+    h2m,h2i=hormat(lat,lon)
+
+    # Time
+    t=spy.str2et('01/01/2017 00:00:000 UTC')
+
+    # Transformation matrices
+    EJ2000toJ2000=spy.pxform("ECLIPJ2000","J2000",t)
+    J2000toEJ2000=spy.pxform("J2000","ECLIPJ2000",t)
+    J2000toEpoch=spy.pxform("J2000","EARTHTRUEEPOCH",t)
+    ITRF93toEJ2000=spy.pxform("ITRF93","ECLIPJ2000",t)
+    J2000toITRF93=spy.pxform("J2000","ITRF93",t)
+    
+    # Observer location with respect to geocenter
+    obsITRF93=spy.georec(lon*DEG,lat*DEG,alt/1000.0,RE,FE)
+    obsEJ2000=spy.mxv(ITRF93toEJ2000,obsITRF93)
+
+    # Observer location with respect to SSB
+    earthSSBEJ2000,ltmp=spy.spkezr("EARTH",t,"ECLIPJ2000","NONE",
+                                   "SOLAR SYSTEM BARYCENTER")
+    obsSSBEJ2000=spy.vadd(earthSSBEJ2000[:3],obsEJ2000)
+
+    # Moon position with respect to observer with light-time correction
+    body="MOON"
+    while np.abs((lt-ltold)/lt)>=1e-10:
+        ltold=lt
+        bodySSBEJ2000,ltmp=spy.spkezr(body,t-lt,"ECLIPJ2000","NONE",
+                                      "SOLAR SYSTEM BARYCENTER")
+        bodyTOPOEJ2000=spy.vsub(bodySSBEJ2000[:3],obsSSBEJ2000[:3])
+        lt=spy.vnorm(bodyTOPOEJ2000)/spy.clight()
+
+    # Body in J2000
+    bodyTOPOJ2000=spy.mxv(EJ2000toJ2000,bodyTOPOEJ2000)
+    d,RAJ2000,DECJ2000=spy.recrad(bodyTOPOJ2000)
+
+    # Results in J2000
+    print "Equatorial coordinates in J2000:"
+    print "RA = ",RAJ2000*RAD
+    print "DEC = ",DECJ2000*RAD
+    print "RA (h,m,s): ",spy.jdec2sex(RAJ2000*RAD/15)
+    print "DEC (d,m,s): ",spy.jdec2sex(DECJ2000*RAD)
+
+    # Body in Ephoch
+    bodyTOPOEP=spy.mxv(J2000toEpoch,bodyTOPOJ2000)
+    d,RAEP,DECEP=spy.recrad(bodyTOPOEP)
+
+    print "Equatorial coordinates for the Epoch:"
+    print "RA = ",RAEP*RAD/15
+    print "DEC = ",DECEP*RAD
+    print "RA (h,m,s): ",spy.jdec2sex(RAEP*RAD/15)
+    print "DEC (d,m,s): ",spy.jdec2sex(DECEP*RAD)
+
+    # Body in Epoch at ITRF93
+    bodyTOPOITRF93=spy.mxv(J2000toITRF93,bodyTOPOJ2000)
+
+    # Unitary vector of the body with respect to ITRF93
+    bodyDir,norm=spy.unorm(bodyTOPOITRF93)
+
+    # Unitary vector in topocentric system
+    bodyDirLocal=spy.mxv(h2m,bodyDir)
+
+    # Conversion to Az and elevation
+    bodyDirLocal[1]*=-1
+    d,Az,h=spy.reclat(bodyDirLocal);
+    if(Az<0):Az+=2*np.pi;
+    h*=RAD;
+    Az*=RAD;
+    
+    print "Horizontal coordinates for the Epoch:"
+    print "AZ = ",Az
+    print "Elev = ",h
+
+    print "Az (d,m,s):",spy.jdec2sex(Az)
+    print "Elev (d,m,s):",spy.jdec2sex(h)
+
+run()
