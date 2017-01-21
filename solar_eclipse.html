@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="css/jspice.css" type="text/css">
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/jspice.js"></script>
+  <style>
+    #map {
+    height: 95vh;
+    width: 50vw;
+    border:solid red 2px;
+    display:table-cell;
+    }
+    #results {
+    height: 95vh;
+    width: 50vw;
+    border:solid blue 2px;
+    display:table-cell;
+    padding:10px;
+    }
+  </style>
+</head>
+<body class="jsp-black">
+  <div style="display:table;border:solid yellow 1px">
+    <div id="map"></div>
+    <div id="results">
+      <h4>Coordenadas</h4>
+      <span id="coordenadas"></span>
+    </div>
+  </div>
+
+  <script>
+
+//Start jspice session
+var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
+				proxy_fqdn:"urania.udea.edu.co",
+				session_type:"unique",
+				verbose_depth:1});
+
+//Init map
+function initMap() {
+    var map = new google.maps.Map(document.getElementById("map"), {
+	center: {lat: 25, lng: -90},
+	zoom: 4
+    });
+
+    google.maps.event.addListener(map,'mousemove',function(event) {
+	jspice.log(event.latLng);
+	$("#coordenadas").html(""+event.latLng);
+    });
+}
+
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBOpzHobhu8v34xNylZahKvK__a9V4KFf4&callback=initMap" async defer></script>
+</body>
+</html>
