@@ -3,6 +3,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <link rel="stylesheet" href="css/jspice.css" type="text/css">
   <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/sprintf.js"></script>
   <script type="text/javascript" src="js/jspice.js"></script>
   <style>
     #map {
@@ -25,29 +26,46 @@
     <div id="map"></div>
     <div id="results">
       <h4>Coordenadas</h4>
-      <span id="coordenadas"></span>
+      <span id="coordenadas"></span><br/>
+      <ul id="contactos"></ul>
     </div>
   </div>
-
   <script>
-
-//Start jspice session
 var jspice_handler=jspice.init({server_fqdn:"urania.udea.edu.co",
 				proxy_fqdn:"urania.udea.edu.co",
 				session_type:"unique",
-				verbose_depth:1});
-
-//Init map
+				verbose_depth:0});
 function initMap() {
     var map = new google.maps.Map(document.getElementById("map"), {
 	center: {lat: 25, lng: -90},
 	zoom: 4
     });
 
-    google.maps.event.addListener(map,'mousemove',function(event) {
-	jspice.log(event.latLng);
-	$("#coordenadas").html(""+event.latLng);
+    jspice_handler.done(function(){
+	jspice.loadSnip("python","solar_eclipse.ph");
+	google.maps.event.addListener(map,'click',function(event) {
+	    var pos=event.latLng;
+	    var lon=pos.lng();
+	    var lat=pos.lat();
+
+	    var marker = new google.maps.Marker({map:map,});
+	    marker.setPosition({lat:lat,lng:lon});
+
+	    var code=jspice.readCode("python",{lat:lat,lon:lon});
+
+            jspice.command(code).done(function(data){
+                $('#coordenadas').html(''+pos);
+                $('#contactos').html(sprintf(`
+<li>C1 = %s</li>
+<li>C2 = %s</li>
+<li>Max = %s</li>
+<li>C3 = %s</li>
+<li>C4 = %s</li>
+`,jspice.output.cal_c1,jspice.output.cal_c2,jspice.output.cal_max,jspice.output.cal_c3,jspice.output.cal_c4));
+            });
+	});
     });
+
 }
 
   </script>

@@ -82,6 +82,8 @@ def hormat(lat,lon):
     normal=spy.surfnm(RE,RE,RP,geopos)
     uy=spy.ucrss(normal,uz)
     ux=spy.ucrss(uy,normal)
+    print "UX=",ux
+    print "UY=",uy
     h2m=np.zeros((3,3))
     h2m[0,0]=ux[0];h2m[0,1]=ux[1];h2m[0,2]=ux[2];
     h2m[1,0]=uy[0];h2m[1,1]=uy[1];h2m[1,2]=uy[2];
@@ -89,87 +91,181 @@ def hormat(lat,lon):
     h2i=spy.invert(h2m);
     return h2m,h2i
 
-def run():
+def runEphem():
     
     # Numeric paraneters
     lt=1;ltold=0;lttol=1e-10;ncn=10;i=0
 
-    # Geographic Partial
+    # Location & Time
     lat=+38.0
     lon=-90.0
     alt=1000.0 # m
-    h2m,h2i=hormat(lat,lon)
+    obs=spy.jobsini("EARTH",lon,lat,alt)
 
-    # Time
-    t=spy.str2et('01/01/2017 00:00:000 UTC')
+    # Initialize observer & rotation matrices
+    t=spy.str2et(sys.argv[1])
+    mat=spy.jrotmat(t)
 
-    # Transformation matrices
-    EJ2000toJ2000=spy.pxform("ECLIPJ2000","J2000",t)
-    J2000toEJ2000=spy.pxform("J2000","ECLIPJ2000",t)
-    J2000toEpoch=spy.pxform("J2000","EARTHTRUEEPOCH",t)
-    ITRF93toEJ2000=spy.pxform("ITRF93","ECLIPJ2000",t)
-    J2000toITRF93=spy.pxform("J2000","ITRF93",t)
+    # Compute ephemeris
+    ephem_moon=spy.jephem("MOON",t,obs,mat)
+    #"""
+    print "Target body :",ephem_moon["target"]
+    print "Distance = ",ephem_moon["distance"]
+    print "Ang.size = ",ephem_moon["angsize"]
+    print "RA (J2000) = ",ephem_moon["RA"]*RAD
+    print "DEC (J2000) = ",ephem_moon["DEC"]*RAD
+    print "RA (t) = ",ephem_moon["RAt"]*RAD
+    print "DEC (t) = ",ephem_moon["DECt"]*RAD
+    print "Az (t) = ",ephem_moon["az"]*RAD
+    print "El (t) = ",ephem_moon["el"]*RAD
+    print "z (t) = ",ephem_moon["z"]*RAD
+    #"""
+
+    ephem_sun=spy.jephem("SUN",t,obs,mat)
+    #"""
+    print "Target body :",ephem_sun["target"]
+    print "Distance = ",ephem_sun["distance"]
+    print "Ang.size = ",ephem_sun["angsize"]
+    print "RA (J2000) = ",ephem_sun["RA"]*RAD
+    print "DEC (J2000) = ",ephem_sun["DEC"]*RAD
+    print "RA (t) = ",ephem_sun["RAt"]*RAD
+    print "DEC (t) = ",ephem_sun["DECt"]*RAD
+    print "Az (t) = ",ephem_sun["az"]*RAD
+    print "El (t) = ",ephem_sun["el"]*RAD
+    print "z (t) = ",ephem_sun["z"]*RAD
+    #"""
+
+    # Determine angular distance
+    angdist=spy.jgcdist(
+        ephem_sun["RA"],ephem_moon["RA"],
+        ephem_sun["DEC"],ephem_moon["DEC"],
+    )
+    print angdist*RAD
+
+    # Time of rise and set of the Sun
+    lat=-37.814
+    lon=144.963
+    alt=0.0 # m
+    obs=spy.jobsini("EARTH",lon,lat,alt)
     
-    # Observer location with respect to geocenter
-    obsITRF93=spy.georec(lon*DEG,lat*DEG,alt/1000.0,RE,FE)
-    obsEJ2000=spy.mxv(ITRF93toEJ2000,obsITRF93)
+    t1=spy.str2et('03/18/2012 18:00:00 UTC')
+    t2=spy.str2et('03/18/2012 22:00:00 UTC')
 
-    # Observer location with respect to SSB
-    earthSSBEJ2000,ltmp=spy.spkezr("EARTH",t,"ECLIPJ2000","NONE",
-                                   "SOLAR SYSTEM BARYCENTER")
-    obsSSBEJ2000=spy.vadd(earthSSBEJ2000[:3],obsEJ2000)
+    def func(t):
+        mat=spy.jrotmat(t)
+        ephem=spy.jephem("SUN",t,obs,mat)
+        #35.4 arcmin is the refraction at the horizon (see
+        #https://en.wikipedia.org/wiki/Atmospheric_refraction)
+        angmid=(ephem["angsize"]/7200+35.4/60.0)*DEG
+        return ephem["el"]+angmid
+        
+    trise=spy.jzero(func,t1,t2)
+    cal=spy.timout(trise,"MM/DD/YYYY HR:MN:SC.###### UTC",100)
+    print cal
 
-    # Moon position with respect to observer with light-time correction
-    body="MOON"
-    while np.abs((lt-ltold)/lt)>=1e-10:
-        ltold=lt
-        bodySSBEJ2000,ltmp=spy.spkezr(body,t-lt,"ECLIPJ2000","NONE",
-                                      "SOLAR SYSTEM BARYCENTER")
-        bodyTOPOEJ2000=spy.vsub(bodySSBEJ2000[:3],obsSSBEJ2000[:3])
-        lt=spy.vnorm(bodyTOPOEJ2000)/spy.clight()
+    # Eclipse calculation
+    spy.furnsh("kernels/de430.bsp")
 
-    # Body in J2000
-    bodyTOPOJ2000=spy.mxv(EJ2000toJ2000,bodyTOPOEJ2000)
-    d,RAJ2000,DECJ2000=spy.recrad(bodyTOPOJ2000)
+    alt=0.0
+    #"""
+    lat=+36.9664
+    lon=-87.6709
+    # Time according to NASA: 18:25:32.0
+    #"""
 
-    # Results in J2000
-    print "Equatorial coordinates in J2000:"
-    print "RA = ",RAJ2000*RAD
-    print "DEC = ",DECJ2000*RAD
-    print "RA (h,m,s): ",spy.jdec2sex(RAJ2000*RAD/15)
-    print "DEC (d,m,s): ",spy.jdec2sex(DECJ2000*RAD)
+    #"""
+    lat=+43.3112
+    lon=-108.5449
+    #"""
+    """
+    Times according to NASA:
+    C1: 16:19:29.1
+    C2: 17:38:41.9
+    Max: 17:39:52.6
+    Alt: 52.2, Az:  138.9
+    C3: 17:41:03.5
+    C4: 19:04:49.8
+    """
 
-    # Body in Ephoch
-    bodyTOPOEP=spy.mxv(J2000toEpoch,bodyTOPOJ2000)
-    d,RAEP,DECEP=spy.recrad(bodyTOPOEP)
+    """
+    lat=+35.6355
+    lon=-84.7485
+    # Time according to NASA: 18:33:17.1
+    #"""
 
-    print "Equatorial coordinates for the Epoch:"
-    print "RA = ",RAEP*RAD/15
-    print "DEC = ",DECEP*RAD
-    print "RA (h,m,s): ",spy.jdec2sex(RAEP*RAD/15)
-    print "DEC (d,m,s): ",spy.jdec2sex(DECEP*RAD)
+    """
+    lat=+40.9597
+    lon=-98.5693
+    # Time according to NASA: 17:59:23.9
+    #"""
 
-    # Body in Epoch at ITRF93
-    bodyTOPOITRF93=spy.mxv(J2000toITRF93,bodyTOPOJ2000)
+    """
+    lat=+6.27
+    lon=-75.5749
+    # Time according to NASA: 19:39:22.5
+    #"""
 
-    # Unitary vector of the body with respect to ITRF93
-    bodyDir,norm=spy.unorm(bodyTOPOITRF93)
+    """
+    lat=+6.26957
+    lon=-75.57495
+    # Time according to Xavier: 19:39:21.9
+    #"""
 
-    # Unitary vector in topocentric system
-    bodyDirLocal=spy.mxv(h2m,bodyDir)
+    """
+    lat=+6.2426
+    lon=-75.5897
+    alt=1470.0
+    #"""
+    """
+    Times according to NASA: 
+    C1: 18:30:07.4
+    Max: 19:39:23.4
+    C2: 20:40:52.3
+    """
 
-    # Conversion to Az and elevation
-    bodyDirLocal[1]*=-1
-    d,Az,h=spy.reclat(bodyDirLocal);
-    if(Az<0):Az+=2*np.pi;
-    h*=RAD;
-    Az*=RAD;
-    
-    print "Horizontal coordinates for the Epoch:"
-    print "AZ = ",Az
-    print "Elev = ",h
+    """
+    lat=+41.31082
+    lon=-99.84375
+    # Time according to NASA: 17:56:40.0
+    #"""
 
-    print "Az (d,m,s):",spy.jdec2sex(Az)
-    print "Elev (d,m,s):",spy.jdec2sex(h)
+    obs=spy.jobsini("EARTH",lon,lat,alt)
+    def angDist(t,obs):
+        return spy.jangdis("MOON","SUN",t,obs)
+    def contactFunction(t,obs,k):
+        return spy.jangdis("MOON","SUN",t,obs,k=k)
 
-run()
+    # Maximum time
+    t1=spy.str2et('08/21/2017 00:00:00 UTC')
+    t2=spy.str2et('08/21/2017 23:59:59 UTC')
+    tecl=spy.jminim(angDist,(t1,t2),method="brent",args=(obs,),tol=1e-13).x
+
+    # Ephemeris of the sun at teclipse
+    mat=spy.jrotmat(tecl)
+    ephem_sun=spy.jephem("SUN",t,obs,mat)
+
+    print "Az,El:",ephem_sun["az"]*RAD,ephem_sun["el"]*RAD
+    print "Deltat:",spy.deltet(tecl,"ET")
+
+    cal=spy.timout(tecl,"MM/DD/YYYY HR:MN:SC.###### UTC",100)
+    print "Maximum:",cal
+
+    # Contact times
+    tc1=spy.jzero(contactFunction,t1,tecl,args=(obs,+1))
+    cal=spy.timout(tc1,"MM/DD/YYYY HR:MN:SC.###### UTC",100)
+    print "C1:",cal
+    try:
+        tc2=spy.jzero(contactFunction,t1,tecl,args=(obs,-1))
+        cal=spy.timout(tc2,"MM/DD/YYYY HR:MN:SC.###### UTC",100)
+        print "C2:",cal
+    except:pass
+    try:
+        tc3=spy.jzero(contactFunction,tecl,t2,args=(obs,-1))
+        cal=spy.timout(tc3,"MM/DD/YYYY HR:MN:SC.###### UTC",100)
+        print "C3:",cal
+    except:pass
+    tc4=spy.jzero(contactFunction,tecl,t2,args=(obs,+1))
+    cal=spy.timout(tc4,"MM/DD/YYYY HR:MN:SC.###### UTC",100)
+    print "C4:",cal
+
+runEphem()

@@ -302,7 +302,25 @@ var jspice=(function($){
 	var mes=dfecha.getUTCMonth()+1;
 	var fecha=mes+'/'+dfecha.getUTCDate()+'/'+dfecha.getUTCFullYear()+' '+dfecha.getUTCHours()+':'+dfecha.getUTCMinutes()+':'+dfecha.getUTCSeconds();
 	return fecha;
-    }
+    };
+
+    jspice.loadSnip=function(element,snipfile){
+	var snippet=document.createElement("template");
+	$(snippet).appendTo($("body"));
+	$(snippet).attr("id",element);
+	$("#"+element).load("snips/"+snipfile);
+	return snippet;
+    };
+    jspice.readCode=function(element,parameters){
+	var code=$("#"+element).html();
+	for(var key in parameters){
+	    jspice.log(key+"="+parameters[key]);
+	    var re=new RegExp("\\[\\["+key+"\\]\\]","g");
+	    code=code.replace(re,parameters[key]);
+	}
+	jspice.log(["Codigo",code],0);
+	return code;
+    };
 
     return jspice;
 }($));
