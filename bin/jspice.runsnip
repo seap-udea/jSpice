@@ -1,0 +1,88 @@
+#!/usr/bin/python
+#############################################################
+#             /######            /##                        #
+#            /##__  ##          |__/                        #
+#        /##| ##  \__/  /######  /##  /#######  /######     #
+#       |__/|  ######  /##__  ##| ## /##_____/ /##__  ##    #
+#        /## \____  ##| ##  \ ##| ##| ##      | ########    #
+#       | ## /##  \ ##| ##  | ##| ##| ##      | ##_____/    #
+#       | ##|  ######/| #######/| ##|  #######|  #######    #
+#       | ## \______/ | ##____/ |__/ \_______/ \_______/    #
+#  /##  | ##          | ##                                  #
+# |  ######/          | ##                                  #
+#  \______/           |__/                                  #
+#							    #
+#                 Jorge I. Zuluaga (C) 2016		    #
+#############################################################
+# Function: run a snippet
+#############################################################
+
+#############################################################
+#EXTERNAL MODULES
+#############################################################
+import sys,os,inspect
+PATH=os.path.realpath(
+    os.path.abspath(os.path.split(
+        inspect.getfile(
+            inspect.currentframe()))[0]))
+DIR=PATH+"/.."
+sys.path.insert(0,DIR+"/bin")
+from jspice import *
+from jspice.spicext import *
+
+#############################################################
+#LOG FILE
+#############################################################
+flog=open(DIR+"/log/runsnip.log","a")
+
+#############################################################
+#CANCEL BEHAVIOR
+#############################################################
+def sigHandler(signal,frame):
+    import sys
+    logEntry(flog,"Terminating runsnip")
+    sys.exit(0)
+signal.signal(signal.SIGINT,sigHandler)
+
+#############################################################
+#READ CONFIGURATION FILE
+#############################################################
+loadConf(DIR+"/jspice.cfg")
+
+#############################################################
+#LOAD SPICE KERNELS
+#############################################################
+ALLKERNELS=[]
+for kernel in glob.glob(DIR+"/"+CONF["kernels_dir"]+"/../*"):
+    if os.path.isdir(kernel):continue
+    ALLKERNELS+=[os.path.basename(kernel)]
+for kernel in glob.glob(DIR+"/"+CONF["kernels_dir"]+"/*"):
+    spy.furnsh(kernel)
+
+#############################################################
+#LOAD SNIPPET
+#############################################################
+# Get parameters
+snipfile=getArg("snipfile")
+parameters=getArg("parameters","param=True")
+if checkArgs():exit(1)
+
+if not os.path.isfile(snipfile):
+    print "Snipfile '%s' provided not found"%snipifle
+
+# Read code and replace
+code=open(snipfile).read()
+parameters=eval("dict("+parameters+")")
+for key in parameters.keys():
+    value=parameters[key]
+    code=code.replace("[[%s]]"%key,str(value))
+
+# Execute code
+def runCode():
+    global code
+    exec(code)
+    variables=locals()
+    for key in variables.keys():
+        print key+":\n\t"+repr(variables[key])
+
+runCode()
